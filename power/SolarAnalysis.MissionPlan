@@ -1,0 +1,3441 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<FreeFlyerProjectFile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" timePrecisionMode="nanosecond" schemaVersion="7.6.0.2">
+  <ProjectInformation>
+    <Author />
+    <Source />
+    <FreeFlyerVersion>7.6.0.54542</FreeFlyerVersion>
+    <RevisionNumber />
+    <Title />
+    <Subject />
+    <Category />
+    <Keywords />
+    <Comments />
+    <Notes />
+  </ProjectInformation>
+  <ProjectPreferences>
+    <General>
+      <LockProjectFromEditing>false</LockProjectFromEditing>
+    </General>
+    <OnOpen>
+      <ShowControlSequence>true</ShowControlSequence>
+      <ShowEmptyEnvironment>false</ShowEmptyEnvironment>
+      <ShowNotes>false</ShowNotes>
+      <ShowHome>false</ShowHome>
+      <ShowOutput>false</ShowOutput>
+      <CreateBackup>false</CreateBackup>
+      <BackupLocation></BackupLocation>
+    </OnOpen>
+    <OnRun>
+      <SaveMissionPlan>false</SaveMissionPlan>
+      <HideWarningMessages>false</HideWarningMessages>
+    </OnRun>
+  </ProjectPreferences>
+  <ProjectDataFiles>
+    <EarthOrientationFile useDefault="true"></EarthOrientationFile>
+    <ElectronDensityCoefficientFile useDefault="true"></ElectronDensityCoefficientFile>
+    <GeopotentialFile useDefault="true"></GeopotentialFile>
+    <HarrisPriesterDragFile useDefault="true"></HarrisPriesterDragFile>
+    <JacchiaAtmosphereModelFile useDefault="true"></JacchiaAtmosphereModelFile>
+    <LeapSecondFile useDefault="true"></LeapSecondFile>
+    <MagneticFieldFile useDefault="true"></MagneticFieldFile>
+    <PlanetaryFile useDefault="true"></PlanetaryFile>
+    <StationGeodeticsFile useDefault="true"></StationGeodeticsFile>
+    <SolidTideFile useDefault="true"></SolidTideFile>
+    <DSTFile useDefault="true"></DSTFile>
+    <StarFieldFile useDefault="true"></StarFieldFile>
+  </ProjectDataFiles>
+  <ProjectObjects>
+    <Object>
+      <SolarSystem name="FF_SolarSystem" isConstant="false" isGlobal="true">
+        <Name>FF_SolarSystem</Name>
+        <ComputePolarMotion>true</ComputePolarMotion>
+        <ApplyUT1Correction>true</ApplyUT1Correction>
+        <COUpdateInterval units="s" displayed_units="s">0</COUpdateInterval>
+        <NPUpdateInterval units="s" displayed_units="s">1800</NPUpdateInterval>
+        <IonosphereOptions>
+          <IonosphereOptions name="FF_SolarSystem_|ionoOptions|" isConstant="false" isGlobal="true">
+            <Name>FF_SolarSystem_|ionoOptions|</Name>
+            <MaximumHeight units="km" displayed_units="km">1000</MaximumHeight>
+            <MinimumHeight units="km" displayed_units="km">80</MinimumHeight>
+            <IntegrationStepSize units="km" displayed_units="km">25</IntegrationStepSize>
+            <ScaleFactor units="" displayed_units="">1</ScaleFactor>
+            <Model>0</Model>
+            <metadata dim="0" />
+          </IonosphereOptions>
+        </IonosphereOptions>
+        <NoradKeplerEqTolerance units="" displayed_units="">1e-12</NoradKeplerEqTolerance>
+        <metadata dim="0" />
+      </SolarSystem>
+    </Object>
+    <Object>
+      <ConsoleWindow name="Console" isConstant="false" isGlobal="true">
+        <Name>Console</Name>
+        <WindowTitle>Console</WindowTitle>
+        <WordWrap>false</WordWrap>
+        <CurrentTextColor>0</CurrentTextColor>
+        <BackColor>16777215</BackColor>
+        <Dimension units="" displayed_units="">10</Dimension>
+        <DockMode>1</DockMode>
+        <CurrentFontType>0</CurrentFontType>
+        <UseStdOut>false</UseStdOut>
+        <ShowOnRun>false</ShowOnRun>
+        <metadata dim="0" />
+      </ConsoleWindow>
+    </Object>
+  </ProjectObjects>
+  <ProjectMissionSequence>
+    <ProjectExternals />
+    <ProjectCommands>
+      <FreeForm enabled="true">
+        <Label>Mission Plan Description and Console Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Mission Plan Description and Console Setup
+
+// This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft. 
+// You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.
+// If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods.
+// Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods,
+// FreeFlyer will slew the Spacecraft to maximize charging surface area.
+
+// Console Setup
+Console.BackColor = ColorTools.Black;
+Console.CurrentTextColor = ColorTools.White;
+Console.Dimension = 35;
+Console.DockMode = 3;
+Console.WordWrap = 1;
+Console.Show();
+
+Report "This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft." +
+      @"You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.\n" to Console;
+
+Report "If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods. " +
+       "Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods, " +
+      @"FreeFlyer will slew the Spacecraft to maximize charging surface area.\n" to Console;
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Create Variables</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[Array PanelVecBCS[10];
+Array SunBCS[10];
+Variable Area;
+Variable Efficiency;
+Variable FixedAttitude;
+Variable PanelPower;
+Variable SunPanelAngle;
+Vector ScSun;
+Vector ScDurand;]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Configuration</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[FixedAttitude = 1.0;      // 0 for changing attitude
+Area.Value = 10.0;        // Value from 0 to 25
+Efficiency.Value = 0.9;   // Value from -1.0 to 1.0]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Setup Durand GroundStation</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[GroundStation Durand;
+Durand.Height = 70;
+Durand.Latitude = 37.4269;
+Durand.Longitude = -122.1733; // East of the prime meridian
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Setup Sapling Satellite</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[Spacecraft Sapling;
+Sapling.VehicleDryMass = 1.33;
+Sapling.A = 7083.1364;
+Sapling.E = 0.0;
+Sapling.I = 98.2083789592433;
+Sapling.RAAN = 280.26791820885;
+Sapling.W = 171.130489033293;
+Sapling.TA = 171.130489033293;
+
+Sapling.VehicleDryMOI = [1200,0,0;0,1200,0;0,0,1200];]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Output Windows</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[ViewWindow VwEarth({
+	Sapling,
+	Durand,
+	ScDurand,
+	ScSun
+});
+
+DataTableWindow DataTable({
+	Sapling.EpochText,
+	SunPanelAngle, // TODO implement SC with metadata struct
+	Sapling.Range(Sun),
+	PanelPower
+});
+
+DataTable.WindowTitle = "Outputs";
+
+PlotWindow PowerPlot({
+	Sapling.ElapsedTime,
+	PanelPower // TODO
+});
+
+PowerPlot.PlotType = "XYPlot";
+PowerPlot.XAxis.Title.Text  = "Elapsed Time (Days)";
+PowerPlot.YAxis.Title.Text = "Power (W)";
+PowerPlot.ShowGridLines = 1;
+
+ReportInterface ReportInterface1;]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Slew Procedure Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Slew Procedure Setup
+
+Define Procedure SetSlewRate(Spacecraft slew, Variable maneuverTime, CoordinateSystem cs, Variable doConsoleOutput);
+    // General Approach:
+    //   Determine the orientation of the end frame with respect to the start frame.
+    //   The euler axis of rotation is the normalization of the first three elements of the quaternion
+    //   Set the Angular Velocity vector to point along this euler axis of rotation
+    //   Propagate spacecraft until the slew angle is equal to the Euler Angle of Rotation
+
+    // Obtain the attitude matrix depicting the starting orientation wrt the reference frame
+    Spacecraft dummy = slew;
+    dummy.AttitudeRefFrame = slew.AttitudeRefFrame;
+    Matrix startAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Obtain the attitude matrix depicting the ending orientation wrt the reference frame
+    dummy.EulerSequence  = {1, 2, 3};
+    dummy.EulerAngles = cs.GetEulerAngles("1-2-3");
+
+    Console.CurrentFontType = 1;
+    Matrix endAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Transpose initial state and multiply by final to determine the matrix expressing
+    // attitude frame 2 (end) with respect to attitude frame 1 (start)
+
+    Matrix startToEndAttitudeMatrix =  startAttitudeMatrix.Transpose*endAttitudeMatrix;
+
+    dummy.AttitudeMatrix = startToEndAttitudeMatrix;
+    Array EulerAxisOfRotation = {dummy.Quaternion[0], dummy.Quaternion[1], dummy.Quaternion[2]};
+
+    EulerAxisOfRotation =  EulerAxisOfRotation.Normalized();
+
+    // Calculate Euler Angle of Rotation
+    Variable EulerAngleOfRotation = deg((acos(0.5*((startToEndAttitudeMatrix[0,0] + 
+    						                        startToEndAttitudeMatrix[1,1] + 
+    						                        startToEndAttitudeMatrix[2,2]) - 1))));
+
+    // Set slew rate to rotate in appropriate time
+    Variable SlewRate = EulerAngleOfRotation/maneuverTime;
+
+    slew.AngularVelocity[0] = SlewRate*EulerAxisOfRotation[0];
+    slew.AngularVelocity[1] = SlewRate*EulerAxisOfRotation[1];
+    slew.AngularVelocity[2] = SlewRate*EulerAxisOfRotation[2];
+
+    Console.CurrentFontType = 0;
+EndProcedure;
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Contact and Visualization Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Contact and Visualization Setup
+
+//Block ThreeDModel Configuration
+// Create ThreeDModel Object
+ThreeDModel tdm;
+tdm.LoadModel("..\_Support_Files\cubesat.3ds");
+
+// Apply 3D model to Cloudsat spacecraft
+Sapling.SetThreeDModel(tdm);
+Sapling.BodyScale = 5000;
+tdm.Scale    = 5000;
+//EndBlock
+
+//Block Vector Configuration
+//Build the Vectors to represent contact with the ground sites we've specified
+List<Vector> contactVects[4];
+
+contactVects[0].BuildVector(9, Sapling, Durand);
+contactVects[0].Color  = ColorTools.Red;
+contactVects[0].Active = 0;
+
+contactVects[2].BuildVector(9, Sapling, Sun);
+contactVects[2].Color  = ColorTools.Gold;
+contactVects[2].Active = 0;
+
+contactVects[3].BuildVector(9, Sapling, Earth);
+contactVects[3].Color  = ColorTools.Lime;
+contactVects[3].Active = 0;
+
+Vector vecAntiZ; //We do this because the 3D Model is backwards
+vecAntiZ.BuildVector(3, contactVects[2]);
+
+Vector vecAntiEarth;
+vecAntiEarth.BuildVector(3, contactVects[3]);
+
+CoordinateSystem csToSun;
+CoordinateSystem csToEarth;
+csToSun.BuildCoordinateSystem(3, vecAntiZ, 2, contactVects[1]);
+csToEarth.BuildCoordinateSystem(3, vecAntiEarth, 2, contactVects[2]);
+//EndBlock
+
+//Block Visibility Object Configuration
+VisibilitySegment toSun;
+VisibilitySegment toDurand;
+
+toSun.AddOccultingBody(Earth, Moon, Mercury, Venus);
+toSun.SetObserver(Sapling);
+toSun.SetTarget(Sun);
+
+toDurand.AddOccultingBody(Earth);
+toDurand.SetObserver(Durand);
+toDurand.SetTarget(Sapling);
+
+//EndBlock
+
+//Block Changing Attitude ViewWindow Setup
+//Create a dummy Spacecraft for ViewWindow centering
+Spacecraft viewCenter;
+viewCenter.Position = Sapling.Position;
+viewCenter.Velocity = Sapling.Velocity;
+
+//Set up the ViewWindow for the fixed attitude system
+ViewWindow vwFixed;
+vwFixed.AddObject(Durand);
+vwFixed.AddObject(Sapling);
+vwFixed.AddObject(contactVects[0]);
+vwFixed.AddObject(contactVects[1]);
+vwFixed.AddObject(contactVects[2]);
+vwFixed.AddObject(viewCenter);
+vwFixed.SetShowName("Durand", 1);
+vwFixed.SetShowName("Sapling", 1);
+vwFixed.SetShowBody("viewCenter", 0);
+
+vwFixed.AddObject(csToEarth);
+vwFixed.AddObject(csToSun);
+
+vwFixed.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwFixed.Viewpoints[0].ThreeDView.Declination    = -140;
+vwFixed.Viewpoints[0].ThreeDView.RightAscension = 310;
+
+//Set up the ViewWindow for the changing attitude system
+ViewWindow vwChangingAttitude;
+vwChangingAttitude.AddObject(Durand);
+vwChangingAttitude.AddObject(Sapling);
+vwChangingAttitude.AddObject(contactVects[0]);
+vwChangingAttitude.AddObject(contactVects[1]);
+vwChangingAttitude.AddObject(contactVects[2]);
+vwChangingAttitude.AddObject(viewCenter);
+vwChangingAttitude.SetShowName("Durand", 1);
+vwChangingAttitude.SetShowName("Sapling", 1);
+vwChangingAttitude.SetShowBody("viewCenter", 0);
+
+vwChangingAttitude.AddObject(csToEarth);
+vwChangingAttitude.AddObject(csToSun);
+
+vwChangingAttitude.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Declination    = -140;
+vwChangingAttitude.Viewpoints[0].ThreeDView.RightAscension = 310;
+//EndBlock
+
+//Block WindowOverlay Configuration
+WindowOverlay wo;
+wo.RemoveAllShapes();
+wo.AddShape();
+wo.Shapes[0].TextOptions.AlignmentHorizontal = 0;
+wo.Shapes[0].TextOptions.TextColor = ColorTools.White;
+wo.Shapes[0].TextOptions.Font.Size = 16;
+wo.Shapes[0].SetOrigin(0,0.01,0.01);
+wo.Shapes[0].SetSize(0,0.6,0.12);
+
+// Turn off default status text for the changing attitude ViewWindow
+vwChangingAttitude.ShowStatusText = 0;
+vwChangingAttitude.AddObject(wo);
+vwChangingAttitude.WindowTitle = "Sapling View";
+
+// Turn off default status text for the Fixed frame ViewWindow 
+vwFixed.ShowStatusText = 0;
+vwFixed.AddObject(wo);
+vwFixed.WindowTitle = "Sapling View";
+
+// Turn off default status text for the Earth-centered ViewWindow 
+VwEarth.ShowStatusText = 0;
+//EndBlock
+
+//Block Variable Setup
+TimeSpan EARTH_MANEUVER_TIME;
+EARTH_MANEUVER_TIME = TIMESPAN(60 seconds);
+TimeSpan SUN_MANEUVER_TIME;
+SUN_MANEUVER_TIME = TIMESPAN(200 seconds);
+Constant Variable sunManeuver   = 200;
+Constant Variable earthManeuver = 60;
+
+TimeSpan cacheEpoch;
+Variable flag = 0;
+Variable isSunSlew      = -1;
+Variable inSunlight     = 0;
+Variable isCharging     = 0;
+Variable inContactDurand = 0;
+
+// Supposing this is constantly radiated by the Sun's whole surface, 
+// the equation giving irradiance of a star of radius R and temperature K at a distance D is
+// w=5.67⋅10−8⋅T^4(R/D)^2. Solving for the Sun, where T = 5778, R = 695700 and 
+// D = 149600000 (1AU), gives us the value of 1366.7 W/m2.
+
+// Variables for Panel Power calculations
+Variable meanPower = 1366.7;			  
+Variable meanSunDistance = 149530000; //1 AU
+
+// Variables for shadow time calculations
+Variable Shadow;
+Variable ShadowPrev;
+//EndBlock
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Attitude Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Attitude Setup
+
+Console.CurrentTextColor = ColorTools.Chocolate;
+If (FixedAttitude == 1);
+	// The spacecraft is fixed therefore all angles and rates go to 0
+	// Set Euler Angles 
+	Sapling.EulerAngles[0] = 0;
+	Sapling.EulerAngles[1] = 0;
+	Sapling.EulerAngles[2] = 0;
+
+	// Set attitude rate of Sapling
+
+	Sapling.EulerRates[0] = 0;
+	Sapling.EulerRates[1] = 0;
+	Sapling.EulerRates[2] = 0;
+
+	Report @"You chose a fixed attitude system.\n" to Console;
+	Report  "Euler Angle 1: " + Sapling.EulerAngles[0].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 2: " + Sapling.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + Sapling.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + Sapling.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + Sapling.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + Sapling.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+Else;
+    Report @"You chose a changing attitude system.\n" to Console;
+End;
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>FreeForm</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[While (Sapling.ElapsedTime < TIMESPAN(8 hours));
+	
+	// Panel Orientation/Attitude Convert
+	
+	// Sapling.SunVector gives Sun position in MJ2000 coordinates
+	// Transform the sun vector to BCS using AttitudeConvert
+	SunBCS = AttitudeConvert(0,3,Sapling,Sapling.SunVector);
+	
+	// Set Solar Panel orientation
+	// Keep panel aligned to Spacecraft BCS (panelVecBCS represents the Vector Normal to the Solar Array)
+	PanelVecBCS = {0, 0, 1};
+	
+	// To examine other panel alignments, you can set a new panel orientation here:
+	// panelVecBCS = {your array assignment here};
+	
+	
+	// Shadow Calculations
+	
+	If (Sapling.InShadow == 0);
+		// Calculate the angle between sun vector and panel normal
+		SunPanelAngle = PanelVecBCS.VertexAngle(SunBCS);
+	
+		// Calculate power from solar panel
+		PanelPower = Efficiency*meanPower*Area*
+		abs(cos(rad(SunPanelAngle)))*
+		Sapling.Range(Sun)/meanSunDistance;
+	ElseIf (Sapling.InShadow == 1);
+		PanelPower = 0;
+	End;
+	
+	Shadow = Sapling.InShadow;
+	
+	If (ShadowPrev != Shadow);
+	    Console.CurrentTextColor = ColorTools.Khaki;
+		If (Shadow == 1);
+			Report Sapling.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Entering Shadow" to Console;
+		Else;
+			Report Sapling.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Leaving Shadow" to Console;
+		End;
+		ShadowPrev = Shadow;
+	End;
+	
+	Console.CurrentTextColor = ColorTools.White;
+	
+	
+	// Changing Attitude Setup
+	
+	If (FixedAttitude == 0);
+	    // Block Contact Analysis
+	    // Determine contact with the ground sites first
+	    If (toDurand.Visibility(Sapling.Epoch) == 1 and inContactDurand == 0);
+	        inContactDurand = 1;
+	    	contactVects[0].Active = 1;
+	
+	    	If(isCharging == 0);
+	    		Console.CurrentTextColor = ColorTools.Khaki;
+	    		Report "Charging has stopped... " to Console;
+			End;
+	
+	    	Console.CurrentTextColor = ColorTools.Red;
+	        Report "Contact with Durand has begun..." to Console;
+	    End;
+	    If (toSun.Visibility(Sapling.Epoch) == 1 and inSunlight == 0);
+	        inSunlight = 1;
+	        contactVects[2].Active = 1;
+	    	isCharging = 0;
+	        
+	    	Console.CurrentTextColor = ColorTools.Khaki;
+	    	Report "Charging has started..." to Console;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	    If (toDurand.Visibility(Sapling.Epoch) == 0 and inContactDurand == 1);
+	        inContactDurand = 0;
+	    	contactVects[0].Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.Red;
+	        Report "Contact with Durand has ended..." to Console;
+	    End;
+	    If (toSun.Visibility(Sapling.Epoch) == 0 and inSunlight == 1);
+	        inSunlight = 0;
+	    	isCharging = 1;
+	        contactVects[2].Active = 0;
+	        
+	    	Console.CurrentTextColor = ColorTools.Khaki;
+	    	Report "Charging has stopped... " to Console;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	
+	    // No contact on any groundstations 
+	    If (inSunlight == 1);
+	        Console.CurrentTextColor = ColorTools.Orange;
+	    	Sapling.Propagator.StepSize = TimeSpan.FromSeconds(10);
+	
+	        // Slew to face the sun
+	        Sapling.AttitudeRefFrame = "MJ2000";
+	        Call SetSlewRate(Sapling, sunManeuver, csToSun, 1);
+	    	cacheEpoch = Sapling.Epoch;
+	        isCharging = 1;
+	        isSunSlew  = 1;
+	    End;
+	    If (isSunSlew == 0 and flag == 0 and Sapling.ElapsedTimeFromEpoch(cacheEpoch) >= EARTH_MANEUVER_TIME);
+	        // Reset the earth slew, swap to LVLH to track the earth
+	        Sapling.AttitudeRefFrame = "LVLH";
+			Sapling.AngularVelocity = {0, 0, 0};
+			flag = 0;
+	        isSunSlew  = -1;
+		End;
+	    If (isSunSlew == 1 and flag == 0 and Sapling.ElapsedTimeFromEpoch(cacheEpoch) >= SUN_MANEUVER_TIME);
+			// Reset the sun slew, leave in MJ2K because sun is far away
+	        Sapling.AngularVelocity = {0, 0, 0};
+			flag = 0;
+	        isSunSlew  = -1;
+		End;
+	End;
+	
+	
+	// Fixed Attitude Reports
+	
+	If (FixedAttitude == 1);
+		//Determine contact with the ground sites first
+	    //Slew to face the earth
+	    Sapling.AttitudeRefFrame = "MJ2000";
+	    Call SetSlewRate(Sapling, earthManeuver, csToEarth, 0);
+	    cacheEpoch = Sapling.Epoch;
+	    isCharging = 0;
+	    isSunSlew  = 0;
+	    
+	    If (toDurand.Visibility(Sapling.Epoch) == 1 and inContactDurand == 0);
+	        inContactDurand = 1;
+	        contactVects[0].Active = 1;
+	    	ScDurand.Color = ColorTools.Red;
+	    	ScDurand.BuildVector(9,Sapling,Durand);
+	    	ScDurand.Active = 1;
+	
+	        Console.CurrentTextColor = ColorTools.LightBlue;
+	        Report "Contact with Durand has begun..." to Console;
+	    End; 
+	    If (toSun.Visibility(Sapling.Epoch) == 1 and inSunlight == 0);
+	        inSunlight = 1;
+	        contactVects[2].Active = 1;
+	    	ScSun.BuildVector(9,Sapling,Sun);
+	    	ScSun.Active = 1;
+	
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	    If (toDurand.Visibility(Sapling.Epoch) == 0 and inContactDurand == 1);
+	        inContactDurand = 0;
+	        contactVects[0].Active = 0;
+	    	ScDurand.Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.LightBlue;
+	        Report "Contact with Durand has ended..." to Console;
+	    End;
+	    If (toSun.Visibility(Sapling.Epoch) == 0 and inSunlight == 1);
+	        inSunlight = 0;
+	        contactVects[2].Active = 0;
+	    	ScSun.Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	End;
+	
+	
+	// Propagate and Generate Outputs
+	
+	Step Sapling;
+	
+	//Synchronize Epochs
+	contactVects[0].Epoch = Sapling.Epoch;
+	contactVects[1].Epoch = Sapling.Epoch;
+	contactVects[2].Epoch = Sapling.Epoch;
+	contactVects[3].Epoch = Sapling.Epoch;
+	vecAntiEarth.Epoch    = Sapling.Epoch;
+	vecAntiZ.Epoch        = Sapling.Epoch;
+	csToEarth.Epoch       = Sapling.Epoch;
+	csToSun.Epoch         = Sapling.Epoch;
+	
+	viewCenter.Position = Sapling.Position;
+	viewCenter.Velocity = Sapling.Velocity;
+	
+	csToEarth.SetPositionVector(vecAntiEarth);
+	csToEarth.VisualScale = 500;
+	csToSun.SetPositionVector(vecAntiEarth);
+	csToSun.VisualScale = 500;
+	
+	// Update customized status text
+	wo.Shapes[0].TextOptions.Text = Sapling.EpochText + @" UTC\n" +
+	                                "Sun Panel Angle: " + SunPanelAngle.Value.Format("%.1f") + @"\n" + 
+	                                "Beta Angle: "      + Sapling.BetaAngle.Format("%.1f");
+	
+	// Update all OutputWindow objects as appropriate
+	Update DataTable;
+	Update PowerPlot;
+	Update VwEarth;
+	Switch (FixedAttitude);
+	    Case 0:
+	        Update vwChangingAttitude;
+	        Break;
+	    Case 1:
+	        Update vwFixed;
+	        Break;
+	End;
+	
+	// Generate Reports
+	Report Sapling.EpochText, Area,SunPanelAngle<8,3>, Sapling.Range(Sun)<8,3>, PanelPower<8,3> to "..\_Output_Files\SolarPower_PanelPower.txt";
+	Report Sapling.ShadowTimes() to "..\_Output_Files\SolarPower_ShadowTimes.txt";
+	
+End;]]></FreeFormScript>
+      </FreeForm>
+    </ProjectCommands>
+  </ProjectMissionSequence>
+  <ProjectScript><![CDATA[
+// Mission Plan Description and Console Setup
+
+// This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft. 
+// You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.
+// If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods.
+// Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods,
+// FreeFlyer will slew the Spacecraft to maximize charging surface area.
+
+// Console Setup
+Console.BackColor = ColorTools.Black;
+Console.CurrentTextColor = ColorTools.White;
+Console.Dimension = 35;
+Console.DockMode = 3;
+Console.WordWrap = 1;
+Console.Show();
+
+Report "This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft." +
+      @"You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.\n" to Console;
+
+Report "If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods. " +
+       "Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods, " +
+      @"FreeFlyer will slew the Spacecraft to maximize charging surface area.\n" to Console;
+
+Array PanelVecBCS[10];
+Array SunBCS[10];
+Variable Area;
+Variable Efficiency;
+Variable FixedAttitude;
+Variable PanelPower;
+Variable SunPanelAngle;
+Vector ScSun;
+Vector ScDurand;
+FixedAttitude = 1.0;      // 0 for changing attitude
+Area.Value = 10.0;        // Value from 0 to 25
+Efficiency.Value = 0.9;   // Value from -1.0 to 1.0
+GroundStation Durand;
+Durand.Height = 70;
+Durand.Latitude = 37.4269;
+Durand.Longitude = -122.1733; // East of the prime meridian
+
+Spacecraft Sapling;
+Sapling.VehicleDryMass = 1.33;
+Sapling.A = 7083.1364;
+Sapling.E = 0.0;
+Sapling.I = 98.2083789592433;
+Sapling.RAAN = 280.26791820885;
+Sapling.W = 171.130489033293;
+Sapling.TA = 171.130489033293;
+
+Sapling.VehicleDryMOI = [1200,0,0;0,1200,0;0,0,1200];
+ViewWindow VwEarth({
+	Sapling,
+	Durand,
+	ScDurand,
+	ScSun
+});
+
+DataTableWindow DataTable({
+	Sapling.EpochText,
+	SunPanelAngle, // TODO implement SC with metadata struct
+	Sapling.Range(Sun),
+	PanelPower
+});
+
+DataTable.WindowTitle = "Outputs";
+
+PlotWindow PowerPlot({
+	Sapling.ElapsedTime,
+	PanelPower // TODO
+});
+
+PowerPlot.PlotType = "XYPlot";
+PowerPlot.XAxis.Title.Text  = "Elapsed Time (Days)";
+PowerPlot.YAxis.Title.Text = "Power (W)";
+PowerPlot.ShowGridLines = 1;
+
+ReportInterface ReportInterface1;
+
+// Slew Procedure Setup
+
+Define Procedure SetSlewRate(Spacecraft slew, Variable maneuverTime, CoordinateSystem cs, Variable doConsoleOutput);
+    // General Approach:
+    //   Determine the orientation of the end frame with respect to the start frame.
+    //   The euler axis of rotation is the normalization of the first three elements of the quaternion
+    //   Set the Angular Velocity vector to point along this euler axis of rotation
+    //   Propagate spacecraft until the slew angle is equal to the Euler Angle of Rotation
+
+    // Obtain the attitude matrix depicting the starting orientation wrt the reference frame
+    Spacecraft dummy = slew;
+    dummy.AttitudeRefFrame = slew.AttitudeRefFrame;
+    Matrix startAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Obtain the attitude matrix depicting the ending orientation wrt the reference frame
+    dummy.EulerSequence  = {1, 2, 3};
+    dummy.EulerAngles = cs.GetEulerAngles("1-2-3");
+
+    Console.CurrentFontType = 1;
+    Matrix endAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Transpose initial state and multiply by final to determine the matrix expressing
+    // attitude frame 2 (end) with respect to attitude frame 1 (start)
+
+    Matrix startToEndAttitudeMatrix =  startAttitudeMatrix.Transpose*endAttitudeMatrix;
+
+    dummy.AttitudeMatrix = startToEndAttitudeMatrix;
+    Array EulerAxisOfRotation = {dummy.Quaternion[0], dummy.Quaternion[1], dummy.Quaternion[2]};
+
+    EulerAxisOfRotation =  EulerAxisOfRotation.Normalized();
+
+    // Calculate Euler Angle of Rotation
+    Variable EulerAngleOfRotation = deg((acos(0.5*((startToEndAttitudeMatrix[0,0] + 
+    						                        startToEndAttitudeMatrix[1,1] + 
+    						                        startToEndAttitudeMatrix[2,2]) - 1))));
+
+    // Set slew rate to rotate in appropriate time
+    Variable SlewRate = EulerAngleOfRotation/maneuverTime;
+
+    slew.AngularVelocity[0] = SlewRate*EulerAxisOfRotation[0];
+    slew.AngularVelocity[1] = SlewRate*EulerAxisOfRotation[1];
+    slew.AngularVelocity[2] = SlewRate*EulerAxisOfRotation[2];
+
+    Console.CurrentFontType = 0;
+EndProcedure;
+
+
+// Contact and Visualization Setup
+
+//Block ThreeDModel Configuration
+// Create ThreeDModel Object
+ThreeDModel tdm;
+tdm.LoadModel("..\_Support_Files\cubesat.3ds");
+
+// Apply 3D model to Cloudsat spacecraft
+Sapling.SetThreeDModel(tdm);
+Sapling.BodyScale = 5000;
+tdm.Scale    = 5000;
+//EndBlock
+
+//Block Vector Configuration
+//Build the Vectors to represent contact with the ground sites we've specified
+List<Vector> contactVects[4];
+
+contactVects[0].BuildVector(9, Sapling, Durand);
+contactVects[0].Color  = ColorTools.Red;
+contactVects[0].Active = 0;
+
+contactVects[2].BuildVector(9, Sapling, Sun);
+contactVects[2].Color  = ColorTools.Gold;
+contactVects[2].Active = 0;
+
+contactVects[3].BuildVector(9, Sapling, Earth);
+contactVects[3].Color  = ColorTools.Lime;
+contactVects[3].Active = 0;
+
+Vector vecAntiZ; //We do this because the 3D Model is backwards
+vecAntiZ.BuildVector(3, contactVects[2]);
+
+Vector vecAntiEarth;
+vecAntiEarth.BuildVector(3, contactVects[3]);
+
+CoordinateSystem csToSun;
+CoordinateSystem csToEarth;
+csToSun.BuildCoordinateSystem(3, vecAntiZ, 2, contactVects[1]);
+csToEarth.BuildCoordinateSystem(3, vecAntiEarth, 2, contactVects[2]);
+//EndBlock
+
+//Block Visibility Object Configuration
+VisibilitySegment toSun;
+VisibilitySegment toDurand;
+
+toSun.AddOccultingBody(Earth, Moon, Mercury, Venus);
+toSun.SetObserver(Sapling);
+toSun.SetTarget(Sun);
+
+toDurand.AddOccultingBody(Earth);
+toDurand.SetObserver(Durand);
+toDurand.SetTarget(Sapling);
+
+//EndBlock
+
+//Block Changing Attitude ViewWindow Setup
+//Create a dummy Spacecraft for ViewWindow centering
+Spacecraft viewCenter;
+viewCenter.Position = Sapling.Position;
+viewCenter.Velocity = Sapling.Velocity;
+
+//Set up the ViewWindow for the fixed attitude system
+ViewWindow vwFixed;
+vwFixed.AddObject(Durand);
+vwFixed.AddObject(Sapling);
+vwFixed.AddObject(contactVects[0]);
+vwFixed.AddObject(contactVects[1]);
+vwFixed.AddObject(contactVects[2]);
+vwFixed.AddObject(viewCenter);
+vwFixed.SetShowName("Durand", 1);
+vwFixed.SetShowName("Sapling", 1);
+vwFixed.SetShowBody("viewCenter", 0);
+
+vwFixed.AddObject(csToEarth);
+vwFixed.AddObject(csToSun);
+
+vwFixed.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwFixed.Viewpoints[0].ThreeDView.Declination    = -140;
+vwFixed.Viewpoints[0].ThreeDView.RightAscension = 310;
+
+//Set up the ViewWindow for the changing attitude system
+ViewWindow vwChangingAttitude;
+vwChangingAttitude.AddObject(Durand);
+vwChangingAttitude.AddObject(Sapling);
+vwChangingAttitude.AddObject(contactVects[0]);
+vwChangingAttitude.AddObject(contactVects[1]);
+vwChangingAttitude.AddObject(contactVects[2]);
+vwChangingAttitude.AddObject(viewCenter);
+vwChangingAttitude.SetShowName("Durand", 1);
+vwChangingAttitude.SetShowName("Sapling", 1);
+vwChangingAttitude.SetShowBody("viewCenter", 0);
+
+vwChangingAttitude.AddObject(csToEarth);
+vwChangingAttitude.AddObject(csToSun);
+
+vwChangingAttitude.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Declination    = -140;
+vwChangingAttitude.Viewpoints[0].ThreeDView.RightAscension = 310;
+//EndBlock
+
+//Block WindowOverlay Configuration
+WindowOverlay wo;
+wo.RemoveAllShapes();
+wo.AddShape();
+wo.Shapes[0].TextOptions.AlignmentHorizontal = 0;
+wo.Shapes[0].TextOptions.TextColor = ColorTools.White;
+wo.Shapes[0].TextOptions.Font.Size = 16;
+wo.Shapes[0].SetOrigin(0,0.01,0.01);
+wo.Shapes[0].SetSize(0,0.6,0.12);
+
+// Turn off default status text for the changing attitude ViewWindow
+vwChangingAttitude.ShowStatusText = 0;
+vwChangingAttitude.AddObject(wo);
+vwChangingAttitude.WindowTitle = "Sapling View";
+
+// Turn off default status text for the Fixed frame ViewWindow 
+vwFixed.ShowStatusText = 0;
+vwFixed.AddObject(wo);
+vwFixed.WindowTitle = "Sapling View";
+
+// Turn off default status text for the Earth-centered ViewWindow 
+VwEarth.ShowStatusText = 0;
+//EndBlock
+
+//Block Variable Setup
+TimeSpan EARTH_MANEUVER_TIME;
+EARTH_MANEUVER_TIME = TIMESPAN(60 seconds);
+TimeSpan SUN_MANEUVER_TIME;
+SUN_MANEUVER_TIME = TIMESPAN(200 seconds);
+Constant Variable sunManeuver   = 200;
+Constant Variable earthManeuver = 60;
+
+TimeSpan cacheEpoch;
+Variable flag = 0;
+Variable isSunSlew      = -1;
+Variable inSunlight     = 0;
+Variable isCharging     = 0;
+Variable inContactDurand = 0;
+
+// Supposing this is constantly radiated by the Sun's whole surface, 
+// the equation giving irradiance of a star of radius R and temperature K at a distance D is
+// w=5.67⋅10−8⋅T^4(R/D)^2. Solving for the Sun, where T = 5778, R = 695700 and 
+// D = 149600000 (1AU), gives us the value of 1366.7 W/m2.
+
+// Variables for Panel Power calculations
+Variable meanPower = 1366.7;			  
+Variable meanSunDistance = 149530000; //1 AU
+
+// Variables for shadow time calculations
+Variable Shadow;
+Variable ShadowPrev;
+//EndBlock
+
+
+// Attitude Setup
+
+Console.CurrentTextColor = ColorTools.Chocolate;
+If (FixedAttitude == 1);
+	// The spacecraft is fixed therefore all angles and rates go to 0
+	// Set Euler Angles 
+	Sapling.EulerAngles[0] = 0;
+	Sapling.EulerAngles[1] = 0;
+	Sapling.EulerAngles[2] = 0;
+
+	// Set attitude rate of Sapling
+
+	Sapling.EulerRates[0] = 0;
+	Sapling.EulerRates[1] = 0;
+	Sapling.EulerRates[2] = 0;
+
+	Report @"You chose a fixed attitude system.\n" to Console;
+	Report  "Euler Angle 1: " + Sapling.EulerAngles[0].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 2: " + Sapling.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + Sapling.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + Sapling.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + Sapling.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + Sapling.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+Else;
+    Report @"You chose a changing attitude system.\n" to Console;
+End;
+
+While (Sapling.ElapsedTime < TIMESPAN(8 hours));
+	
+	// Panel Orientation/Attitude Convert
+	
+	// Sapling.SunVector gives Sun position in MJ2000 coordinates
+	// Transform the sun vector to BCS using AttitudeConvert
+	SunBCS = AttitudeConvert(0,3,Sapling,Sapling.SunVector);
+	
+	// Set Solar Panel orientation
+	// Keep panel aligned to Spacecraft BCS (panelVecBCS represents the Vector Normal to the Solar Array)
+	PanelVecBCS = {0, 0, 1};
+	
+	// To examine other panel alignments, you can set a new panel orientation here:
+	// panelVecBCS = {your array assignment here};
+	
+	
+	// Shadow Calculations
+	
+	If (Sapling.InShadow == 0);
+		// Calculate the angle between sun vector and panel normal
+		SunPanelAngle = PanelVecBCS.VertexAngle(SunBCS);
+	
+		// Calculate power from solar panel
+		PanelPower = Efficiency*meanPower*Area*
+		abs(cos(rad(SunPanelAngle)))*
+		Sapling.Range(Sun)/meanSunDistance;
+	ElseIf (Sapling.InShadow == 1);
+		PanelPower = 0;
+	End;
+	
+	Shadow = Sapling.InShadow;
+	
+	If (ShadowPrev != Shadow);
+	    Console.CurrentTextColor = ColorTools.Khaki;
+		If (Shadow == 1);
+			Report Sapling.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Entering Shadow" to Console;
+		Else;
+			Report Sapling.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Leaving Shadow" to Console;
+		End;
+		ShadowPrev = Shadow;
+	End;
+	
+	Console.CurrentTextColor = ColorTools.White;
+	
+	
+	// Changing Attitude Setup
+	
+	If (FixedAttitude == 0);
+	    // Block Contact Analysis
+	    // Determine contact with the ground sites first
+	    If (toDurand.Visibility(Sapling.Epoch) == 1 and inContactDurand == 0);
+	        inContactDurand = 1;
+	    	contactVects[0].Active = 1;
+	
+	    	If(isCharging == 0);
+	    		Console.CurrentTextColor = ColorTools.Khaki;
+	    		Report "Charging has stopped... " to Console;
+			End;
+	
+	    	Console.CurrentTextColor = ColorTools.Red;
+	        Report "Contact with Durand has begun..." to Console;
+	    End;
+	    If (toSun.Visibility(Sapling.Epoch) == 1 and inSunlight == 0);
+	        inSunlight = 1;
+	        contactVects[2].Active = 1;
+	    	isCharging = 0;
+	        
+	    	Console.CurrentTextColor = ColorTools.Khaki;
+	    	Report "Charging has started..." to Console;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	    If (toDurand.Visibility(Sapling.Epoch) == 0 and inContactDurand == 1);
+	        inContactDurand = 0;
+	    	contactVects[0].Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.Red;
+	        Report "Contact with Durand has ended..." to Console;
+	    End;
+	    If (toSun.Visibility(Sapling.Epoch) == 0 and inSunlight == 1);
+	        inSunlight = 0;
+	    	isCharging = 1;
+	        contactVects[2].Active = 0;
+	        
+	    	Console.CurrentTextColor = ColorTools.Khaki;
+	    	Report "Charging has stopped... " to Console;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	
+	    // No contact on any groundstations 
+	    If (inSunlight == 1);
+	        Console.CurrentTextColor = ColorTools.Orange;
+	    	Sapling.Propagator.StepSize = TimeSpan.FromSeconds(10);
+	
+	        // Slew to face the sun
+	        Sapling.AttitudeRefFrame = "MJ2000";
+	        Call SetSlewRate(Sapling, sunManeuver, csToSun, 1);
+	    	cacheEpoch = Sapling.Epoch;
+	        isCharging = 1;
+	        isSunSlew  = 1;
+	    End;
+	    If (isSunSlew == 0 and flag == 0 and Sapling.ElapsedTimeFromEpoch(cacheEpoch) >= EARTH_MANEUVER_TIME);
+	        // Reset the earth slew, swap to LVLH to track the earth
+	        Sapling.AttitudeRefFrame = "LVLH";
+			Sapling.AngularVelocity = {0, 0, 0};
+			flag = 0;
+	        isSunSlew  = -1;
+		End;
+	    If (isSunSlew == 1 and flag == 0 and Sapling.ElapsedTimeFromEpoch(cacheEpoch) >= SUN_MANEUVER_TIME);
+			// Reset the sun slew, leave in MJ2K because sun is far away
+	        Sapling.AngularVelocity = {0, 0, 0};
+			flag = 0;
+	        isSunSlew  = -1;
+		End;
+	End;
+	
+	
+	// Fixed Attitude Reports
+	
+	If (FixedAttitude == 1);
+		//Determine contact with the ground sites first
+	    //Slew to face the earth
+	    Sapling.AttitudeRefFrame = "MJ2000";
+	    Call SetSlewRate(Sapling, earthManeuver, csToEarth, 0);
+	    cacheEpoch = Sapling.Epoch;
+	    isCharging = 0;
+	    isSunSlew  = 0;
+	    
+	    If (toDurand.Visibility(Sapling.Epoch) == 1 and inContactDurand == 0);
+	        inContactDurand = 1;
+	        contactVects[0].Active = 1;
+	    	ScDurand.Color = ColorTools.Red;
+	    	ScDurand.BuildVector(9,Sapling,Durand);
+	    	ScDurand.Active = 1;
+	
+	        Console.CurrentTextColor = ColorTools.LightBlue;
+	        Report "Contact with Durand has begun..." to Console;
+	    End; 
+	    If (toSun.Visibility(Sapling.Epoch) == 1 and inSunlight == 0);
+	        inSunlight = 1;
+	        contactVects[2].Active = 1;
+	    	ScSun.BuildVector(9,Sapling,Sun);
+	    	ScSun.Active = 1;
+	
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	    If (toDurand.Visibility(Sapling.Epoch) == 0 and inContactDurand == 1);
+	        inContactDurand = 0;
+	        contactVects[0].Active = 0;
+	    	ScDurand.Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.LightBlue;
+	        Report "Contact with Durand has ended..." to Console;
+	    End;
+	    If (toSun.Visibility(Sapling.Epoch) == 0 and inSunlight == 1);
+	        inSunlight = 0;
+	        contactVects[2].Active = 0;
+	    	ScSun.Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	End;
+	
+	
+	// Propagate and Generate Outputs
+	
+	Step Sapling;
+	
+	//Synchronize Epochs
+	contactVects[0].Epoch = Sapling.Epoch;
+	contactVects[1].Epoch = Sapling.Epoch;
+	contactVects[2].Epoch = Sapling.Epoch;
+	contactVects[3].Epoch = Sapling.Epoch;
+	vecAntiEarth.Epoch    = Sapling.Epoch;
+	vecAntiZ.Epoch        = Sapling.Epoch;
+	csToEarth.Epoch       = Sapling.Epoch;
+	csToSun.Epoch         = Sapling.Epoch;
+	
+	viewCenter.Position = Sapling.Position;
+	viewCenter.Velocity = Sapling.Velocity;
+	
+	csToEarth.SetPositionVector(vecAntiEarth);
+	csToEarth.VisualScale = 500;
+	csToSun.SetPositionVector(vecAntiEarth);
+	csToSun.VisualScale = 500;
+	
+	// Update customized status text
+	wo.Shapes[0].TextOptions.Text = Sapling.EpochText + @" UTC\n" +
+	                                "Sun Panel Angle: " + SunPanelAngle.Value.Format("%.1f") + @"\n" + 
+	                                "Beta Angle: "      + Sapling.BetaAngle.Format("%.1f");
+	
+	// Update all OutputWindow objects as appropriate
+	Update DataTable;
+	Update PowerPlot;
+	Update VwEarth;
+	Switch (FixedAttitude);
+	    Case 0:
+	        Update vwChangingAttitude;
+	        Break;
+	    Case 1:
+	        Update vwFixed;
+	        Break;
+	End;
+	
+	// Generate Reports
+	Report Sapling.EpochText, Area,SunPanelAngle<8,3>, Sapling.Range(Sun)<8,3>, PanelPower<8,3> to "..\_Output_Files\SolarPower_PanelPower.txt";
+	Report Sapling.ShadowTimes() to "..\_Output_Files\SolarPower_ShadowTimes.txt";
+	
+End;]]></ProjectScript>
+  <ProjectNotes></ProjectNotes>
+</FreeFlyerProjectFile>|_|PlotTitle|</Name>
+                <Color>0</Color>
+                <Font>
+                  <PlotFont name="PowerPlot_|RAxis|_|PlotTitle|_|PlotFont|" isConstant="false" isGlobal="false">
+                    <Name>PowerPlot_|RAxis|_|PlotTitle|_|PlotFont|</Name>
+                    <Bold>false</Bold>
+                    <BoldDefault>false</BoldDefault>
+                    <Italic>false</Italic>
+                    <Size units="points" displayed_units="points">9</Size>
+                    <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                    <Strikeout>false</Strikeout>
+                    <Typeface>Verdana</Typeface>
+                    <TypefaceDefault>Verdana</TypefaceDefault>
+                    <Underline>false</Underline>
+                    <metadata dim="0" />
+                  </PlotFont>
+                </Font>
+                <Text></Text>
+                <TextDefault></TextDefault>
+                <Visible>true</Visible>
+                <metadata dim="0" />
+              </PlotTitle>
+            </Title>
+            <UseAutoMaximum>true</UseAutoMaximum>
+            <UseAutoMinimum>true</UseAutoMinimum>
+            <UseDateTimeFormatting>false</UseDateTimeFormatting>
+            <UseDateTimeFormattingDefault>false</UseDateTimeFormattingDefault>
+            <metadata dim="0" />
+          </PlotAxis>
+        </RAxis>
+        <OwnedSeries dim="1">
+          <value>
+            <PlotScatterSeries name="PowerPlot_PlotScatterSeries1" isConstant="false" isGlobal="false">
+              <Name>PowerPlot_PlotScatterSeries1</Name>
+              <DataLabelsFont>
+                <PlotFont name="PowerPlot_PlotScatterSeries1_|PlotFont|" isConstant="false" isGlobal="false">
+                  <Name>PowerPlot_PlotScatterSeries1_|PlotFont|</Name>
+                  <Bold>false</Bold>
+                  <BoldDefault>false</BoldDefault>
+                  <Italic>false</Italic>
+                  <Size units="points" displayed_units="points">9</Size>
+                  <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                  <Strikeout>false</Strikeout>
+                  <Typeface>Verdana</Typeface>
+                  <TypefaceDefault>Verdana</TypefaceDefault>
+                  <Underline>false</Underline>
+                  <metadata dim="0" />
+                </PlotFont>
+              </DataLabelsFont>
+              <DataLabelsTextColor>0</DataLabelsTextColor>
+              <DataLabelsBackgroundColor>14745599</DataLabelsBackgroundColor>
+              <DataLabelsBackgroundVisible>false</DataLabelsBackgroundVisible>
+              <DataLabelsStyle>2</DataLabelsStyle>
+              <DataLabelsVisible>false</DataLabelsVisible>
+              <Label>panelPower</Label>
+              <LabelDefault>panelPower</LabelDefault>
+              <LineColor>12674086</LineColor>
+              <LineStyle>0</LineStyle>
+              <LineVisible>true</LineVisible>
+              <LineWidth units="" displayed_units="">1</LineWidth>
+              <MarkersColor>12674086</MarkersColor>
+              <MarkersSize units="" displayed_units="">1</MarkersSize>
+              <MarkersStyle>0</MarkersStyle>
+              <MarkersVisible>false</MarkersVisible>
+              <ShowInLegend>false</ShowInLegend>
+              <EnableDataCulling>true</EnableDataCulling>
+              <FullDataLabels dim="0" />
+              <FullData units="" displayed_units="" dim="0,2" />
+              <metadata dim="0" />
+            </PlotScatterSeries>
+          </value>
+        </OwnedSeries>
+        <ThetaAxis>
+          <PlotAxis name="PowerPlot_|ThetaAxis|" isConstant="false" isGlobal="false">
+            <Name>PowerPlot_|ThetaAxis|</Name>
+            <Direction>0</Direction>
+            <GridColor>13420739</GridColor>
+            <GridLineStyle>2</GridLineStyle>
+            <GridLineStyleDefault>2</GridLineStyleDefault>
+            <GridLineWidth units="" displayed_units="">1</GridLineWidth>
+            <GridVisible>true</GridVisible>
+            <LabelsArrangement>0</LabelsArrangement>
+            <LabelsColor>0</LabelsColor>
+            <LabelsFont>
+              <PlotFont name="PowerPlot_|ThetaAxis|_|PlotFont|" isConstant="false" isGlobal="false">
+                <Name>PowerPlot_|ThetaAxis|_|PlotFont|</Name>
+                <Bold>false</Bold>
+                <BoldDefault>false</BoldDefault>
+                <Italic>false</Italic>
+                <Size units="points" displayed_units="points">9</Size>
+                <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                <Strikeout>false</Strikeout>
+                <Typeface>Verdana</Typeface>
+                <TypefaceDefault>Verdana</TypefaceDefault>
+                <Underline>false</Underline>
+                <metadata dim="0" />
+              </PlotFont>
+            </LabelsFont>
+            <LabelsFormat>0.000</LabelsFormat>
+            <LabelsSpacing units="" displayed_units="">0</LabelsSpacing>
+            <Location>0</Location>
+            <MaximumValue units="" displayed_units="">0</MaximumValue>
+            <MinimumValue units="" displayed_units="">0</MinimumValue>
+            <Scaling>0</Scaling>
+            <Title>
+              <PlotTitle name="PowerPlot_|ThetaAxis|_|PlotTitle|" isConstant="false" isGlobal="false">
+                <Name>PowerPlot_|ThetaAxis|_|PlotTitle|</Name>
+                <Color>0</Color>
+                <Font>
+                  <PlotFont name="PowerPlot_|ThetaAxis|_|PlotTitle|_|PlotFont|" isConstant="false" isGlobal="false">
+                    <Name>PowerPlot_|ThetaAxis|_|PlotTitle|_|PlotFont|</Name>
+                    <Bold>false</Bold>
+                    <BoldDefault>false</BoldDefault>
+                    <Italic>false</Italic>
+                    <Size units="points" displayed_units="points">9</Size>
+                    <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                    <Strikeout>false</Strikeout>
+                    <Typeface>Verdana</Typeface>
+                    <TypefaceDefault>Verdana</TypefaceDefault>
+                    <Underline>false</Underline>
+                    <metadata dim="0" />
+                  </PlotFont>
+                </Font>
+                <Text></Text>
+                <TextDefault></TextDefault>
+                <Visible>true</Visible>
+                <metadata dim="0" />
+              </PlotTitle>
+            </Title>
+            <UseAutoMaximum>true</UseAutoMaximum>
+            <UseAutoMinimum>true</UseAutoMinimum>
+            <UseDateTimeFormatting>false</UseDateTimeFormatting>
+            <UseDateTimeFormattingDefault>false</UseDateTimeFormattingDefault>
+            <metadata dim="0" />
+          </PlotAxis>
+        </ThetaAxis>
+        <XAxis>
+          <PlotAxis name="PowerPlot_|XAxis|" isConstant="false" isGlobal="false">
+            <Name>PowerPlot_|XAxis|</Name>
+            <Direction>0</Direction>
+            <GridColor>13420739</GridColor>
+            <GridLineStyle>2</GridLineStyle>
+            <GridLineStyleDefault>2</GridLineStyleDefault>
+            <GridLineWidth units="" displayed_units="">1</GridLineWidth>
+            <GridVisible>true</GridVisible>
+            <LabelsArrangement>0</LabelsArrangement>
+            <LabelsColor>0</LabelsColor>
+            <LabelsFont>
+              <PlotFont name="PowerPlot_|XAxis|_|PlotFont|" isConstant="false" isGlobal="false">
+                <Name>PowerPlot_|XAxis|_|PlotFont|</Name>
+                <Bold>false</Bold>
+                <BoldDefault>false</BoldDefault>
+                <Italic>false</Italic>
+                <Size units="points" displayed_units="points">9</Size>
+                <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                <Strikeout>false</Strikeout>
+                <Typeface>Verdana</Typeface>
+                <TypefaceDefault>Verdana</TypefaceDefault>
+                <Underline>false</Underline>
+                <metadata dim="0" />
+              </PlotFont>
+            </LabelsFont>
+            <LabelsFormat>0.000</LabelsFormat>
+            <LabelsSpacing units="" displayed_units="">0</LabelsSpacing>
+            <Location>0</Location>
+            <MaximumValue units="" displayed_units="">44</MaximumValue>
+            <MinimumValue units="" displayed_units="">0</MinimumValue>
+            <Scaling>0</Scaling>
+            <Title>
+              <PlotTitle name="PowerPlot_|XAxis|_|PlotTitle|" isConstant="false" isGlobal="false">
+                <Name>PowerPlot_|XAxis|_|PlotTitle|</Name>
+                <Color>0</Color>
+                <Font>
+                  <PlotFont name="PowerPlot_|XAxis|_|PlotTitle|_|PlotFont|" isConstant="false" isGlobal="false">
+                    <Name>PowerPlot_|XAxis|_|PlotTitle|_|PlotFont|</Name>
+                    <Bold>false</Bold>
+                    <BoldDefault>false</BoldDefault>
+                    <Italic>false</Italic>
+                    <Size units="points" displayed_units="points">9</Size>
+                    <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                    <Strikeout>false</Strikeout>
+                    <Typeface>Verdana</Typeface>
+                    <TypefaceDefault>Verdana</TypefaceDefault>
+                    <Underline>false</Underline>
+                    <metadata dim="0" />
+                  </PlotFont>
+                </Font>
+                <Text>Elapsed time (days)</Text>
+                <TextDefault>SolarSat.ElapsedTime (day)</TextDefault>
+                <Visible>true</Visible>
+                <metadata dim="0" />
+              </PlotTitle>
+            </Title>
+            <UseAutoMaximum>true</UseAutoMaximum>
+            <UseAutoMinimum>true</UseAutoMinimum>
+            <UseDateTimeFormatting>false</UseDateTimeFormatting>
+            <UseDateTimeFormattingDefault>false</UseDateTimeFormattingDefault>
+            <metadata dim="0" />
+          </PlotAxis>
+        </XAxis>
+        <YAxis>
+          <PlotAxis name="PowerPlot_|YAxis|" isConstant="false" isGlobal="false">
+            <Name>PowerPlot_|YAxis|</Name>
+            <Direction>0</Direction>
+            <GridColor>13420739</GridColor>
+            <GridLineStyle>2</GridLineStyle>
+            <GridLineStyleDefault>2</GridLineStyleDefault>
+            <GridLineWidth units="" displayed_units="">1</GridLineWidth>
+            <GridVisible>true</GridVisible>
+            <LabelsArrangement>0</LabelsArrangement>
+            <LabelsColor>0</LabelsColor>
+            <LabelsFont>
+              <PlotFont name="PowerPlot_|YAxis|_|PlotFont|" isConstant="false" isGlobal="false">
+                <Name>PowerPlot_|YAxis|_|PlotFont|</Name>
+                <Bold>false</Bold>
+                <BoldDefault>false</BoldDefault>
+                <Italic>false</Italic>
+                <Size units="points" displayed_units="points">9</Size>
+                <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                <Strikeout>false</Strikeout>
+                <Typeface>Verdana</Typeface>
+                <TypefaceDefault>Verdana</TypefaceDefault>
+                <Underline>false</Underline>
+                <metadata dim="0" />
+              </PlotFont>
+            </LabelsFont>
+            <LabelsFormat>0.000</LabelsFormat>
+            <LabelsSpacing units="" displayed_units="">0</LabelsSpacing>
+            <Location>0</Location>
+            <MaximumValue units="" displayed_units="">1.9993908270191</MaximumValue>
+            <MinimumValue units="" displayed_units="">0.000609172980904238</MinimumValue>
+            <Scaling>0</Scaling>
+            <Title>
+              <PlotTitle name="PowerPlot_|YAxis|_|PlotTitle|" isConstant="false" isGlobal="false">
+                <Name>PowerPlot_|YAxis|_|PlotTitle|</Name>
+                <Color>0</Color>
+                <Font>
+                  <PlotFont name="PowerPlot_|YAxis|_|PlotTitle|_|PlotFont|" isConstant="false" isGlobal="false">
+                    <Name>PowerPlot_|YAxis|_|PlotTitle|_|PlotFont|</Name>
+                    <Bold>false</Bold>
+                    <BoldDefault>false</BoldDefault>
+                    <Italic>false</Italic>
+                    <Size units="points" displayed_units="points">9</Size>
+                    <SizeDefault units="points" displayed_units="points">9</SizeDefault>
+                    <Strikeout>false</Strikeout>
+                    <Typeface>Verdana</Typeface>
+                    <TypefaceDefault>Verdana</TypefaceDefault>
+                    <Underline>false</Underline>
+                    <metadata dim="0" />
+                  </PlotFont>
+                </Font>
+                <Text>Power (W)</Text>
+                <TextDefault>panelPower</TextDefault>
+                <Visible>true</Visible>
+                <metadata dim="0" />
+              </PlotTitle>
+            </Title>
+            <UseAutoMaximum>true</UseAutoMaximum>
+            <UseAutoMinimum>true</UseAutoMinimum>
+            <UseDateTimeFormatting>false</UseDateTimeFormatting>
+            <UseDateTimeFormattingDefault>false</UseDateTimeFormattingDefault>
+            <metadata dim="0" />
+          </PlotAxis>
+        </YAxis>
+        <metadata dim="0" />
+      </PlotWindow>
+    </Object>
+    <Object>
+      <Vector name="ScCanberra" isConstant="false" isGlobal="false">
+        <Name>ScCanberra</Name>
+        <Alpha units="deg" displayed_units="deg">0.0</Alpha>
+        <Delta units="deg" displayed_units="deg">0.0</Delta>
+        <Magnitude units="" displayed_units="">1.0</Magnitude>
+        <Epoch>Undefined</Epoch>
+        <Visualization>
+          <Color>65535</Color>
+          <MagnitudeScaleFactor units="" displayed_units="">1.0</MagnitudeScaleFactor>
+          <Active>true</Active>
+          <DrawMethod>0</DrawMethod>
+          <LabelLocation>1</LabelLocation>
+          <VisualOffset units="km" displayed_units="km" dim="(3)">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </VisualOffset>
+        </Visualization>
+        <metadata dim="0" />
+      </Vector>
+    </Object>
+    <Object>
+      <Vector name="ScMadrid" isConstant="false" isGlobal="false">
+        <Name>ScMadrid</Name>
+        <Alpha units="deg" displayed_units="deg">0.0</Alpha>
+        <Delta units="deg" displayed_units="deg">0.0</Delta>
+        <Magnitude units="" displayed_units="">1.0</Magnitude>
+        <Epoch>Undefined</Epoch>
+        <Visualization>
+          <Color>65535</Color>
+          <MagnitudeScaleFactor units="" displayed_units="">1.0</MagnitudeScaleFactor>
+          <Active>true</Active>
+          <DrawMethod>0</DrawMethod>
+          <LabelLocation>1</LabelLocation>
+          <VisualOffset units="km" displayed_units="km" dim="(3)">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </VisualOffset>
+        </Visualization>
+        <metadata dim="0" />
+      </Vector>
+    </Object>
+    <Object>
+      <Vector name="ScSun" isConstant="false" isGlobal="false">
+        <Name>ScSun</Name>
+        <Alpha units="deg" displayed_units="deg">0.0</Alpha>
+        <Delta units="deg" displayed_units="deg">0.0</Delta>
+        <Magnitude units="" displayed_units="">1.0</Magnitude>
+        <Epoch>Undefined</Epoch>
+        <Visualization>
+          <Color>65535</Color>
+          <MagnitudeScaleFactor units="" displayed_units="">1.0</MagnitudeScaleFactor>
+          <Active>true</Active>
+          <DrawMethod>0</DrawMethod>
+          <LabelLocation>1</LabelLocation>
+          <VisualOffset units="km" displayed_units="km" dim="(3)">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </VisualOffset>
+        </Visualization>
+        <metadata dim="0" />
+      </Vector>
+    </Object>
+    <Object>
+      <ViewWindow name="VwEarth" isConstant="false" isGlobal="false">
+        <Name>VwEarth</Name>
+        <WindowTitle>Earth View</WindowTitle>
+        <Viewpoints dim="1">
+          <value>
+            <Viewpoint name="VwEarth_Default" isConstant="false" isGlobal="false">
+              <Name>VwEarth_Default</Name>
+              <ViewpointName>Default</ViewpointName>
+              <ViewpointType>view</ViewpointType>
+              <ViewpointParameters>
+                <view>
+                  <ThreeDView>
+                    <ThreeDViewpointOptions name="VwEarth_Default_|ThreeDView|" isConstant="false" isGlobal="false">
+                      <Name>VwEarth_Default_|ThreeDView|</Name>
+                      <Source>Earth</Source>
+                      <Target>Earth</Target>
+                      <TailReference>Earth</TailReference>
+                      <ReferenceFrame>inertial</ReferenceFrame>
+                      <Declination units="deg" displayed_units="deg">20.0</Declination>
+                      <FieldOfView units="deg" displayed_units="deg">45.0</FieldOfView>
+                      <Radius units="km" displayed_units="km">19500</Radius>
+                      <RightAscension units="deg" displayed_units="deg">270.0</RightAscension>
+                      <metadata dim="0" />
+                    </ThreeDViewpointOptions>
+                  </ThreeDView>
+                </view>
+              </ViewpointParameters>
+              <metadata dim="0" />
+            </Viewpoint>
+          </value>
+        </Viewpoints>
+        <UseLighting>true</UseLighting>
+        <UseTextures>true</UseTextures>
+        <ShowLogo>true</ShowLogo>
+        <LogoTextureFilename></LogoTextureFilename>
+        <ShowStatusText>true</ShowStatusText>
+        <ShowTextBackdrops>true</ShowTextBackdrops>
+        <AmbientColor>6710886</AmbientColor>
+        <StatusTextColor>15790320</StatusTextColor>
+        <BackgroundColor>0</BackgroundColor>
+        <ObjectShadowing>0</ObjectShadowing>
+        <StatusTextFont>
+          <ViewFont name="VwEarth_|StatusTextFont|" isConstant="false" isGlobal="false">
+            <Name>VwEarth_|StatusTextFont|</Name>
+            <Bold>false</Bold>
+            <Italic>false</Italic>
+            <Size units="" displayed_units="">0.0</Size>
+            <Strikeout>false</Strikeout>
+            <Typeface>Tahoma</Typeface>
+            <Underline>false</Underline>
+            <metadata dim="0" />
+          </ViewFont>
+        </StatusTextFont>
+        <DefaultObjectLabelFont>
+          <ViewFont name="VwEarth_|DefaultObjectLabelFont|" isConstant="false" isGlobal="false">
+            <Name>VwEarth_|DefaultObjectLabelFont|</Name>
+            <Bold>false</Bold>
+            <Italic>false</Italic>
+            <Size units="" displayed_units="">20</Size>
+            <Strikeout>false</Strikeout>
+            <Typeface>Tahoma</Typeface>
+            <Underline>false</Underline>
+            <metadata dim="0" />
+          </ViewFont>
+        </DefaultObjectLabelFont>
+        <Objects dim="16">
+          <value>Mercury</value>
+          <value>Venus</value>
+          <value>Earth</value>
+          <value>Moon</value>
+          <value>Mars</value>
+          <value>Jupiter</value>
+          <value>Saturn</value>
+          <value>Uranus</value>
+          <value>Neptune</value>
+          <value>Pluto</value>
+          <value>Sun</value>
+          <value>Stars</value>
+          <value>Sapling</value>
+          <value>ScCanberra</value>
+          <value>ScMadrid</value>
+          <value>ScSun</value>
+        </Objects>
+        <ProjectionHeights units="km" displayed_units="km" dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>800</value>
+          <value>800</value>
+          <value>800</value>
+          <value>800</value>
+        </ProjectionHeights>
+        <ShowObject dim="16">
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+        </ShowObject>
+        <ShowBody dim="16">
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+        </ShowBody>
+        <ShowName dim="16">
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>0</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </ShowName>
+        <ShowGrid dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </ShowGrid>
+        <ShowAxes dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </ShowAxes>
+        <ShowHistory dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </ShowHistory>
+        <ShowIcon dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </ShowIcon>
+        <IconImageFilename dim="16">
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+          <value></value>
+        </IconImageFilename>
+        <IconSize units="pixel" displayed_units="pixel" dim="16">
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30.0</value>
+          <value>30</value>
+          <value>30</value>
+          <value>30</value>
+          <value>30</value>
+        </IconSize>
+        <IconDrawingMode dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </IconDrawingMode>
+        <IconColor dim="16">
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+          <value>4294967295</value>
+        </IconColor>
+        <StoreVelocity dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </StoreVelocity>
+        <AxesScaleMode dim="16">
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+        </AxesScaleMode>
+        <AxesSize units="km" displayed_units="km" dim="16">
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+        </AxesSize>
+        <AxesScale units="" displayed_units="" dim="16">
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+          <value>1.3</value>
+        </AxesScale>
+        <TailLength units="" displayed_units="" dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>100</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </TailLength>
+        <HistoryMode units="" displayed_units="" dim="16">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </HistoryMode>
+        <CurrentTailState units="" displayed_units="" dim="16">
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+        </CurrentTailState>
+        <LineWidthUnits units="" displayed_units="" dim="16">
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+        </LineWidthUnits>
+        <LineWidths units="" displayed_units="" dim="16">
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1.0</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+        </LineWidths>
+        <LabelFonts dim="16">
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+          <value xsi:nil="true" />
+        </LabelFonts>
+        <MouseInteractionEnabled>true</MouseInteractionEnabled>
+        <metadata dim="0" />
+      </ViewWindow>
+    </Object>
+    <Object>
+      <ReportInterface name="ReportInterface1" isConstant="false" isGlobal="false">
+        <Name>ReportInterface1</Name>
+        <Filename></Filename>
+        <Append>false</Append>
+        <AutoLinefeed>true</AutoLinefeed>
+        <AutoPadding>true</AutoPadding>
+        <ColumnDelimiter></ColumnDelimiter>
+        <NumberFormat>%15.9f</NumberFormat>
+        <HeaderType>1</HeaderType>
+        <metadata dim="0" />
+      </ReportInterface>
+    </Object>
+    <Object>
+      <DataTableWindow name="DataTableWindow1" isConstant="false" isGlobal="false">
+        <Name>DataTableWindow1</Name>
+        <WindowTitle>Outputs</WindowTitle>
+        <Items dim="4">
+          <value>
+            <EventWithFormat name="DataTableWindow1_:Items1" isConstant="false" isGlobal="false">
+              <Name>DataTableWindow1_:Items1</Name>
+              <BaseObject>
+                <EventCall name="DataTableWindow1_:Items1_:BaseObject" isConstant="false" isGlobal="false">
+                  <Name>DataTableWindow1_:Items1_:BaseObject</Name>
+                  <BaseObject>Sapling</BaseObject>
+                  <EventName>EpochText</EventName>
+                  <Parameters dim="0" />
+                  <metadata dim="0" />
+                </EventCall>
+              </BaseObject>
+              <Width units="" displayed_units="">5</Width>
+              <Precision units="" displayed_units="">3</Precision>
+              <metadata dim="0" />
+            </EventWithFormat>
+          </value>
+          <value>
+            <EventWithFormat name="DataTableWindow1_:Items2" isConstant="false" isGlobal="false">
+              <Name>DataTableWindow1_:Items2</Name>
+              <BaseObject>
+                <ObjectHolder name="DataTableWindow1_:Items2_:BaseObject" isConstant="false" isGlobal="false">
+                  <Name>DataTableWindow1_:Items2_:BaseObject</Name>
+                  <BaseObject>SunPanelAngle</BaseObject>
+                  <metadata dim="0" />
+                </ObjectHolder>
+              </BaseObject>
+              <Width units="" displayed_units="">8</Width>
+              <Precision units="" displayed_units="">3</Precision>
+              <metadata dim="0" />
+            </EventWithFormat>
+          </value>
+          <value>
+            <EventWithFormat name="DataTableWindow1_:Items3" isConstant="false" isGlobal="false">
+              <Name>DataTableWindow1_:Items3</Name>
+              <BaseObject>
+                <EventCall name="DataTableWindow1_:Items3_:BaseObject" isConstant="false" isGlobal="false">
+                  <Name>DataTableWindow1_:Items3_:BaseObject</Name>
+                  <BaseObject>Sapling</BaseObject>
+                  <EventName>Range</EventName>
+                  <Parameters dim="1">
+                    <value>
+                      <ObjectHolder name="DataTableWindow1_:Items3_:BaseObject_:Parameters1" isConstant="false" isGlobal="false">
+                        <Name>DataTableWindow1_:Items3_:BaseObject_:Parameters1</Name>
+                        <BaseObject>Sun</BaseObject>
+                        <metadata dim="0" />
+                      </ObjectHolder>
+                    </value>
+                  </Parameters>
+                  <metadata dim="0" />
+                </EventCall>
+              </BaseObject>
+              <Width units="" displayed_units="">8</Width>
+              <Precision units="" displayed_units="">3</Precision>
+              <metadata dim="0" />
+            </EventWithFormat>
+          </value>
+          <value>
+            <EventWithFormat name="DataTableWindow1_:Items4" isConstant="false" isGlobal="false">
+              <Name>DataTableWindow1_:Items4</Name>
+              <BaseObject>
+                <ObjectHolder name="DataTableWindow1_:Items4_:BaseObject" isConstant="false" isGlobal="false">
+                  <Name>DataTableWindow1_:Items4_:BaseObject</Name>
+                  <BaseObject>PanelPower</BaseObject>
+                  <metadata dim="0" />
+                </ObjectHolder>
+              </BaseObject>
+              <Width units="" displayed_units="">8</Width>
+              <Precision units="" displayed_units="">3</Precision>
+              <metadata dim="0" />
+            </EventWithFormat>
+          </value>
+        </Items>
+        <metadata dim="0" />
+      </DataTableWindow>
+    </Object>
+  </ProjectObjects>
+  <ProjectMissionSequence>
+    <ProjectExternals />
+    <ProjectCommands>
+      <FreeForm enabled="true">
+        <Label>Mission Plan Description and Console Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Mission Plan Description and Console Setup
+
+// This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft. 
+// You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.
+// If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods.
+// Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods,
+// FreeFlyer will slew the Spacecraft to maximize charging surface area.
+
+// Console Setup
+Console.BackColor = ColorTools.Black;
+Console.CurrentTextColor = ColorTools.White;
+Console.Dimension = 35;
+Console.DockMode = 3;
+Console.WordWrap = 1;
+Console.Show();
+
+Report "This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft." +
+      @"You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.\n" to Console;
+
+Report "If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods. " +
+       "Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods, " +
+      @"FreeFlyer will slew the Spacecraft to maximize charging surface area.\n" to Console;
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Create Variables</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[Array PanelVelBCS[10];
+Array SunBCS[10];
+Variable Area;
+Variable Efficiency;
+Variable FixedAttitude;
+Variable PanelPower;
+Variable SunPanelAngle;]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Configuration</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[FixedAttitude = 1.0;      // 0 for changing attitude
+Area.Value = 10.0;        // Value from 0 to 25
+Efficiency.Value = 0.9;   // Value from -1.0 to 1.0]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Setup Durand GroundStation</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[GroundStation Durand;
+Durand.Height = 70;
+Durand.Latitude = 37.4269;
+Durand.Longitude = -122.1733; // East of the prime meridian
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Setup Sapling Satellite</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[Spacecraft Sapling;
+Sapling.Mass = 1.33;
+Sapling.A = 7083.1364;
+Sapling.E = 0.0;
+Sapling.I = 98.2083789592433;
+Sapling.RAAN = 280.26791820885;
+Sapling.W = 171.130489033293;
+Sapling.TA = 171.130489033293;
+
+Sapling.MOI = {}]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Slew Procedure Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Slew Procedure Setup
+
+Define Procedure SetSlewRate(Spacecraft slew, Variable maneuverTime, CoordinateSystem cs, Variable doConsoleOutput);
+    // General Approach:
+    //   Determine the orientation of the end frame with respect to the start frame.
+    //   The euler axis of rotation is the normalization of the first three elements of the quaternion
+    //   Set the Angular Velocity vector to point along this euler axis of rotation
+    //   Propagate spacecraft until the slew angle is equal to the Euler Angle of Rotation
+
+    // Obtain the attitude matrix depicting the starting orientation wrt the reference frame
+    Spacecraft dummy = slew;
+    dummy.AttitudeRefFrame = slew.AttitudeRefFrame;
+    Matrix startAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Obtain the attitude matrix depicting the ending orientation wrt the reference frame
+    dummy.EulerSequence  = {1, 2, 3};
+    dummy.EulerAngles = cs.GetEulerAngles("1-2-3");
+
+    Console.CurrentFontType = 1;
+    Matrix endAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Transpose initial state and multiply by final to determine the matrix expressing
+    // attitude frame 2 (end) with respect to attitude frame 1 (start)
+
+    Matrix startToEndAttitudeMatrix =  startAttitudeMatrix.Transpose*endAttitudeMatrix;
+
+    dummy.AttitudeMatrix = startToEndAttitudeMatrix;
+    Array EulerAxisOfRotation = {dummy.Quaternion[0], dummy.Quaternion[1], dummy.Quaternion[2]};
+
+    EulerAxisOfRotation =  EulerAxisOfRotation.Normalized();
+
+    // Calculate Euler Angle of Rotation
+    Variable EulerAngleOfRotation = deg((acos(0.5*((startToEndAttitudeMatrix[0,0] + 
+    						                        startToEndAttitudeMatrix[1,1] + 
+    						                        startToEndAttitudeMatrix[2,2]) - 1))));
+
+    // Set slew rate to rotate in appropriate time
+    Variable SlewRate = EulerAngleOfRotation/maneuverTime;
+
+    slew.AngularVelocity[0] = SlewRate*EulerAxisOfRotation[0];
+    slew.AngularVelocity[1] = SlewRate*EulerAxisOfRotation[1];
+    slew.AngularVelocity[2] = SlewRate*EulerAxisOfRotation[2];
+
+    Console.CurrentFontType = 0;
+EndProcedure;
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Contact and Visualization Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Contact and Visualization Setup
+
+//Block ThreeDModel Configuration
+// Create ThreeDModel Object
+ThreeDModel tdm;
+tdm.LoadModel("..\_Support_Files\cubesat.3ds");
+
+// Apply 3D model to Cloudsat spacecraft
+SolarSat.SetThreeDModel(tdm);
+SolarSat.BodyScale = 5000;
+tdm.Scale    = 5000;
+//EndBlock
+
+//Block Vector Configuration
+//Build the Vectors to represent contact with the ground sites we've specified
+List<Vector> contactVects[4];
+
+contactVects[0].BuildVector(9, SolarSat, Durand);
+contactVects[0].Color  = ColorTools.Red;
+contactVects[0].Active = 0;
+
+contactVects[2].BuildVector(9, SolarSat, Sun);
+contactVects[2].Color  = ColorTools.Gold;
+contactVects[2].Active = 0;
+
+contactVects[3].BuildVector(9, SolarSat, Earth);
+contactVects[3].Color  = ColorTools.Lime;
+contactVects[3].Active = 0;
+
+Vector vecAntiZ; //We do this because the 3D Model is backwards
+vecAntiZ.BuildVector(3, contactVects[2]);
+
+Vector vecAntiEarth;
+vecAntiEarth.BuildVector(3, contactVects[3]);
+
+CoordinateSystem csToSun;
+CoordinateSystem csToEarth;
+csToSun.BuildCoordinateSystem(3, vecAntiZ, 2, contactVects[1]);
+csToEarth.BuildCoordinateSystem(3, vecAntiEarth, 2, contactVects[2]);
+//EndBlock
+
+//Block Visibility Object Configuration
+VisibilitySegment toSun;
+VisibilitySegment toDurand;
+
+toSun.AddOccultingBody(Earth, Moon, Mercury, Venus);
+toSun.SetObserver(SolarSat);
+toSun.SetTarget(Sun);
+
+toDurand.AddOccultingBody(Earth);
+toDurand.SetObserver(Durand);
+toDurand.SetTarget(SolarSat);
+
+//EndBlock
+
+//Block Changing Attitude ViewWindow Setup
+//Create a dummy Spacecraft for ViewWindow centering
+Spacecraft viewCenter;
+viewCenter.Position = SolarSat.Position;
+viewCenter.Velocity = SolarSat.Velocity;
+
+//Set up the ViewWindow for the fixed attitude system
+ViewWindow vwFixed;
+vwFixed.AddObject(Durand);
+vwFixed.AddObject(SolarSat);
+vwFixed.AddObject(contactVects[0]);
+vwFixed.AddObject(contactVects[1]);
+vwFixed.AddObject(contactVects[2]);
+vwFixed.AddObject(viewCenter);
+vwFixed.SetShowName("Durand", 1);
+vwFixed.SetShowName("SolarSat", 1);
+vwFixed.SetShowBody("viewCenter", 0);
+
+vwFixed.AddObject(csToEarth);
+vwFixed.AddObject(csToSun);
+
+vwFixed.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwFixed.Viewpoints[0].ThreeDView.Declination    = -140;
+vwFixed.Viewpoints[0].ThreeDView.RightAscension = 310;
+
+//Set up the ViewWindow for the changing attitude system
+ViewWindow vwChangingAttitude;
+vwChangingAttitude.AddObject(Durand);
+vwChangingAttitude.AddObject(SolarSat);
+vwChangingAttitude.AddObject(contactVects[0]);
+vwChangingAttitude.AddObject(contactVects[1]);
+vwChangingAttitude.AddObject(contactVects[2]);
+vwChangingAttitude.AddObject(viewCenter);
+vwChangingAttitude.SetShowName("Durand", 1);
+vwChangingAttitude.SetShowName("SolarSat", 1);
+vwChangingAttitude.SetShowBody("viewCenter", 0);
+
+vwChangingAttitude.AddObject(csToEarth);
+vwChangingAttitude.AddObject(csToSun);
+
+vwChangingAttitude.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Declination    = -140;
+vwChangingAttitude.Viewpoints[0].ThreeDView.RightAscension = 310;
+//EndBlock
+
+//Block WindowOverlay Configuration
+WindowOverlay wo;
+wo.RemoveAllShapes();
+wo.AddShape();
+wo.Shapes[0].TextOptions.AlignmentHorizontal = 0;
+wo.Shapes[0].TextOptions.TextColor = ColorTools.White;
+wo.Shapes[0].TextOptions.Font.Size = 16;
+wo.Shapes[0].SetOrigin(0,0.01,0.01);
+wo.Shapes[0].SetSize(0,0.6,0.12);
+
+// Turn off default status text for the changing attitude ViewWindow
+vwChangingAttitude.ShowStatusText = 0;
+vwChangingAttitude.AddObject(wo);
+vwChangingAttitude.WindowTitle = "SolarSat View";
+
+// Turn off default status text for the Fixed frame ViewWindow 
+vwFixed.ShowStatusText = 0;
+vwFixed.AddObject(wo);
+vwFixed.WindowTitle = "SolarSat View";
+
+// Turn off default status text for the Earth-centered ViewWindow 
+VwEarth.ShowStatusText = 0;
+//EndBlock
+
+//Block Variable Setup
+TimeSpan EARTH_MANEUVER_TIME;
+EARTH_MANEUVER_TIME = TIMESPAN(60 seconds);
+TimeSpan SUN_MANEUVER_TIME;
+SUN_MANEUVER_TIME = TIMESPAN(200 seconds);
+Constant Variable sunManeuver   = 200;
+Constant Variable earthManeuver = 60;
+
+TimeSpan cacheEpoch;
+Variable flag = 0;
+Variable isSunSlew      = -1;
+Variable inSunlight     = 0;
+Variable isCharging     = 0;
+Variable inContactDurand = 0;
+
+// Supposing this is constantly radiated by the Sun's whole surface, 
+// the equation giving irradiance of a star of radius R and temperature K at a distance D is
+// w=5.67⋅10−8⋅T^4(R/D)^2. Solving for the Sun, where T = 5778, R = 695700 and 
+// D = 149600000 (1AU), gives us the value of 1366.7 W/m2.
+
+// Variables for Panel Power calculations
+Variable meanPower = 1366.7;			  
+Variable meanSunDistance = 149530000; //1 AU
+
+// Variables for shadow time calculations
+Variable Shadow;
+Variable ShadowPrev;
+//EndBlock
+]]></FreeFormScript>
+      </FreeForm>
+      <FreeForm enabled="true">
+        <Label>Attitude Setup</Label>
+        <Bookmarks />
+        <Breakpoints />
+        <FreeFormScript><![CDATA[
+// Attitude Setup
+
+Console.CurrentTextColor = ColorTools.Chocolate;
+If (FixedAttitude == 1);
+	// The spacecraft is fixed therefore all angles and rates go to 0
+	// Set Euler Angles 
+	SolarSat.EulerAngles[0] = 0;
+	SolarSat.EulerAngles[1] = 0;
+	SolarSat.EulerAngles[2] = 0;
+
+	// Set attitude rate of SolarSat
+
+	SolarSat.EulerRates[0] = 0;
+	SolarSat.EulerRates[1] = 0;
+	SolarSat.EulerRates[2] = 0;
+
+	Report @"You chose a fixed attitude system.\n" to Console;
+	Report  "Euler Angle 1: " + SolarSat.EulerAngles[0].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 2: " + SolarSat.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + SolarSat.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + SolarSat.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + SolarSat.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + SolarSat.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+Else;
+    Report @"You chose a changing attitude system.\n" to Console;
+End;
+]]></FreeFormScript>
+      </FreeForm>
+      <WhileCommand enabled="true" collapsed="false">
+        <While name="Command9" isConstant="false" isGlobal="false">
+          <Name>Command9</Name>
+          <Condition>
+            <LogicalExpression name="Command9_:Condition" isConstant="false" isGlobal="false">
+              <Name>Command9_:Condition</Name>
+              <LHS xsi:nil="true" />
+              <RHS>
+                <LogicalCondition name="Command9_:Condition_:RHS" isConstant="false" isGlobal="false">
+                  <Name>Command9_:Condition_:RHS</Name>
+                  <ConditionType>RelExprDbl</ConditionType>
+                  <Condition>
+                    <RelationalExprReal name="Command9_:Condition_:RHS_:Condition" isConstant="false" isGlobal="false">
+                      <Name>Command9_:Condition_:RHS_:Condition</Name>
+                      <LHS>
+                        <EventCall name="Command9_:Condition_:RHS_:Condition_:LHS" isConstant="false" isGlobal="false">
+                          <Name>Command9_:Condition_:RHS_:Condition_:LHS</Name>
+                          <BaseObject>Sapling</BaseObject>
+                          <EventName>ElapsedTime</EventName>
+                          <Parameters dim="0" />
+                          <metadata dim="0" />
+                        </EventCall>
+                      </LHS>
+                      <RHS>
+                        <TimeSpanConstant name="Command9_:Condition_:RHS_:Condition_:RHS" isConstant="false" isGlobal="false">
+                          <Name>Command9_:Condition_:RHS_:Condition_:RHS</Name>
+                          <value>8</value>
+                          <Units>hours</Units>
+                          <metadata dim="0" />
+                        </TimeSpanConstant>
+                      </RHS>
+                      <Operator>&lt;</Operator>
+                      <metadata dim="0" />
+                    </RelationalExprReal>
+                  </Condition>
+                  <metadata dim="0" />
+                </LogicalCondition>
+              </RHS>
+              <Operator>and</Operator>
+              <metadata dim="0" />
+            </LogicalExpression>
+          </Condition>
+          <metadata dim="0" />
+        </While>
+        <FreeForm enabled="true">
+          <Label>Panel Orientation/Attitude Convert</Label>
+          <Bookmarks />
+          <Breakpoints />
+          <FreeFormScript><![CDATA[
+// Panel Orientation/Attitude Convert
+
+// SolarSat.SunVector gives Sun position in MJ2000 coordinates
+// Transform the sun vector to BCS using AttitudeConvert
+SunBCS = AttitudeConvert(0,3,SolarSat,SolarSat.SunVector);
+
+// Set Solar Panel orientation
+// Keep panel aligned to Spacecraft BCS (panelVecBCS represents the Vector Normal to the Solar Array)
+PanelVecBCS = {0, 0, 1};
+
+// To examine other panel alignments, you can set a new panel orientation here:
+// panelVecBCS = {your array assignment here};
+]]></FreeFormScript>
+        </FreeForm>
+        <FreeForm enabled="true">
+          <Label>Shadow Calculations</Label>
+          <Bookmarks />
+          <Breakpoints />
+          <FreeFormScript><![CDATA[
+// Shadow Calculations
+
+If (SolarSat.InShadow == 0);
+	// Calculate the angle between sun vector and panel normal
+	SunPanelAngle = PanelVecBCS.VertexAngle(SunBCS);
+
+	// Calculate power from solar panel
+	PanelPower = Efficiency*meanPower*Area*
+	abs(cos(rad(SunPanelAngle)))*
+	SolarSat.Range(Sun)/meanSunDistance;
+ElseIf (SolarSat.InShadow == 1);
+	PanelPower = 0;
+End;
+
+Shadow = SolarSat.InShadow;
+
+If (ShadowPrev != Shadow);
+    Console.CurrentTextColor = ColorTools.Khaki;
+	If (Shadow == 1);
+		Report SolarSat.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Entering Shadow" to Console;
+	Else;
+		Report SolarSat.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Leaving Shadow" to Console;
+	End;
+	ShadowPrev = Shadow;
+End;
+
+Console.CurrentTextColor = ColorTools.White;
+]]></FreeFormScript>
+        </FreeForm>
+        <FreeForm enabled="true">
+          <Label>Changing Attitude Setup</Label>
+          <Bookmarks />
+          <Breakpoints />
+          <FreeFormScript><![CDATA[
+// Changing Attitude Setup
+
+If (FixedAttitude == 0);
+    // Block Contact Analysis
+    // Determine contact with the ground sites first
+    If (toDurand.Visibility(SolarSat.Epoch) == 1 and inContactDurand == 0);
+        inContactDurand = 1;
+    	contactVects[0].Active = 1;
+
+    	If(isCharging == 0);
+    		Console.CurrentTextColor = ColorTools.Khaki;
+    		Report "Charging has stopped... " to Console;
+		End;
+
+    	Console.CurrentTextColor = ColorTools.Red;
+        Report "Contact with Durand has begun..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 1 and inSunlight == 0);
+        inSunlight = 1;
+        contactVects[2].Active = 1;
+    	isCharging = 0;
+        
+    	Console.CurrentTextColor = ColorTools.Khaki;
+    	Report "Charging has started..." to Console;
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+    If (toDurand.Visibility(SolarSat.Epoch) == 0 and inContactDurand == 1);
+        inContactDurand = 0;
+    	contactVects[0].Active = 0;
+
+        Console.CurrentTextColor = ColorTools.Red;
+        Report "Contact with Durand has ended..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 0 and inSunlight == 1);
+        inSunlight = 0;
+    	isCharging = 1;
+        contactVects[2].Active = 0;
+        
+    	Console.CurrentTextColor = ColorTools.Khaki;
+    	Report "Charging has stopped... " to Console;
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+
+    // No contact on any groundstations 
+    If (inSunlight == 1);
+        Console.CurrentTextColor = ColorTools.Orange;
+    	SolarSat.Propagator.StepSize = TimeSpan.FromSeconds(10);
+
+        // Slew to face the sun
+        SolarSat.AttitudeRefFrame = "MJ2000";
+        Call SetSlewRate(SolarSat, sunManeuver, csToSun, 1);
+    	cacheEpoch = SolarSat.Epoch;
+        isCharging = 1;
+        isSunSlew  = 1;
+    End;
+    If (isSunSlew == 0 and flag == 0 and SolarSat.ElapsedTimeFromEpoch(cacheEpoch) >= EARTH_MANEUVER_TIME);
+        // Reset the earth slew, swap to LVLH to track the earth
+        SolarSat.AttitudeRefFrame = "LVLH";
+		SolarSat.AngularVelocity = {0, 0, 0};
+		flag = 0;
+        isSunSlew  = -1;
+	End;
+    If (isSunSlew == 1 and flag == 0 and SolarSat.ElapsedTimeFromEpoch(cacheEpoch) >= SUN_MANEUVER_TIME);
+		// Reset the sun slew, leave in MJ2K because sun is far away
+        SolarSat.AngularVelocity = {0, 0, 0};
+		flag = 0;
+        isSunSlew  = -1;
+	End;
+End;
+]]></FreeFormScript>
+        </FreeForm>
+        <FreeForm enabled="true">
+          <Label>Fixed Attitude Reports</Label>
+          <Bookmarks />
+          <Breakpoints />
+          <FreeFormScript><![CDATA[
+// Fixed Attitude Reports
+
+If (FixedAttitude == 1);
+	//Determine contact with the ground sites first
+    //Slew to face the earth
+    SolarSat.AttitudeRefFrame = "MJ2000";
+    Call SetSlewRate(SolarSat, earthManeuver, csToEarth, 0);
+    cacheEpoch = SolarSat.Epoch;
+    isCharging = 0;
+    isSunSlew  = 0;
+    
+    If (toDurand.Visibility(SolarSat.Epoch) == 1 and inContactDurand == 0);
+        inContactDurand = 1;
+        contactVects[0].Active = 1;
+    	ScDurand.Color = ColorTools.Red;
+    	ScDurand.BuildVector(9,SolarSat,Durand);
+    	ScDurand.Active = 1;
+
+        Console.CurrentTextColor = ColorTools.LightBlue;
+        Report "Contact with Durand has begun..." to Console;
+    End; 
+    If (toSun.Visibility(SolarSat.Epoch) == 1 and inSunlight == 0);
+        inSunlight = 1;
+        contactVects[2].Active = 1;
+    	ScSun.BuildVector(9,SolarSat,Sun);
+    	ScSun.Active = 1;
+
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+    If (toDurand.Visibility(SolarSat.Epoch) == 0 and inContactDurand == 1);
+        inContactDurand = 0;
+        contactVects[0].Active = 0;
+    	ScDurand.Active = 0;
+
+        Console.CurrentTextColor = ColorTools.LightBlue;
+        Report "Contact with Durand has ended..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 0 and inSunlight == 1);
+        inSunlight = 0;
+        contactVects[2].Active = 0;
+    	ScSun.Active = 0;
+
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+End;
+]]></FreeFormScript>
+        </FreeForm>
+        <FreeForm enabled="true">
+          <Label>Propagate and Generate Outputs</Label>
+          <Bookmarks />
+          <Breakpoints />
+          <FreeFormScript><![CDATA[
+// Propagate and Generate Outputs
+
+Step SolarSat;
+
+//Synchronize Epochs
+contactVects[0].Epoch = SolarSat.Epoch;
+contactVects[1].Epoch = SolarSat.Epoch;
+contactVects[2].Epoch = SolarSat.Epoch;
+contactVects[3].Epoch = SolarSat.Epoch;
+vecAntiEarth.Epoch    = SolarSat.Epoch;
+vecAntiZ.Epoch        = SolarSat.Epoch;
+csToEarth.Epoch       = SolarSat.Epoch;
+csToSun.Epoch         = SolarSat.Epoch;
+
+viewCenter.Position = SolarSat.Position;
+viewCenter.Velocity = SolarSat.Velocity;
+
+csToEarth.SetPositionVector(vecAntiEarth);
+csToEarth.VisualScale = 500;
+csToSun.SetPositionVector(vecAntiEarth);
+csToSun.VisualScale = 500;
+
+// Update customized status text
+wo.Shapes[0].TextOptions.Text = SolarSat.EpochText + @" UTC\n" +
+                                "Sun Panel Angle: " + SunPanelAngle.Value.Format("%.1f") + @"\n" + 
+                                "Beta Angle: "      + SolarSat.BetaAngle.Format("%.1f");
+
+// Update all OutputWindow objects as appropriate
+Update DataTableWindow1;
+Update PowerPlot;
+Update VwEarth;
+Switch (FixedAttitude);
+    Case 0:
+        Update vwChangingAttitude;
+        Break;
+    Case 1:
+        Update vwFixed;
+        Break;
+End;
+
+// Generate Reports
+Report SolarSat.EpochText, Area,SunPanelAngle<8,3>, SolarSat.Range(Sun)<8,3>, PanelPower<8,3> to "..\_Output_Files\SolarPower_PanelPower.txt";
+Report SolarSat.ShadowTimes() to "..\_Output_Files\SolarPower_ShadowTimes.txt";
+]]></FreeFormScript>
+        </FreeForm>
+      </WhileCommand>
+    </ProjectCommands>
+  </ProjectMissionSequence>
+  <ProjectScript><![CDATA[
+// Mission Plan Description and Console Setup
+
+// This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft. 
+// You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.
+// If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods.
+// Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods,
+// FreeFlyer will slew the Spacecraft to maximize charging surface area.
+
+// Console Setup
+Console.BackColor = ColorTools.Black;
+Console.CurrentTextColor = ColorTools.White;
+Console.Dimension = 35;
+Console.DockMode = 3;
+Console.WordWrap = 1;
+Console.Show();
+
+Report "This Mission Plan calculates solar power available from a solar array which is fixed to the body coordinate system (BCS) of a Spacecraft." +
+      @"You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the UserInterface at the beginning of each run.\n" to Console;
+
+Report "If you select 'Changing Attitude' the Mission Plan demonstrates how to have FreeFlyer change the orientation of a 3U CubeSat during charging periods. " +
+       "Charging periods are defined as periods outside of shadow where no contact with desired GroundStation(s) is present. During these charging periods, " +
+      @"FreeFlyer will slew the Spacecraft to maximize charging surface area.\n" to Console;
+
+Array PanelVelBCS[10];
+Array SunBCS[10];
+Variable Area;
+Variable Efficiency;
+Variable FixedAttitude;
+Variable PanelPower;
+Variable SunPanelAngle;
+FixedAttitude = 1.0;      // 0 for changing attitude
+Area.Value = 10.0;        // Value from 0 to 25
+Efficiency.Value = 0.9;   // Value from -1.0 to 1.0
+GroundStation Durand;
+Durand.Height = 70;
+Durand.Latitude = 37.4269;
+Durand.Longitude = -122.1733; // East of the prime meridian
+
+Spacecraft Sapling;
+Sapling.Mass = 1.33;
+Sapling.A = 7083.1364;
+Sapling.E = 0.0;
+Sapling.I = 98.2083789592433;
+Sapling.RAAN = 280.26791820885;
+Sapling.W = 171.130489033293;
+Sapling.TA = 171.130489033293;
+
+Sapling.MOI = {}
+
+// Slew Procedure Setup
+
+Define Procedure SetSlewRate(Spacecraft slew, Variable maneuverTime, CoordinateSystem cs, Variable doConsoleOutput);
+    // General Approach:
+    //   Determine the orientation of the end frame with respect to the start frame.
+    //   The euler axis of rotation is the normalization of the first three elements of the quaternion
+    //   Set the Angular Velocity vector to point along this euler axis of rotation
+    //   Propagate spacecraft until the slew angle is equal to the Euler Angle of Rotation
+
+    // Obtain the attitude matrix depicting the starting orientation wrt the reference frame
+    Spacecraft dummy = slew;
+    dummy.AttitudeRefFrame = slew.AttitudeRefFrame;
+    Matrix startAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Obtain the attitude matrix depicting the ending orientation wrt the reference frame
+    dummy.EulerSequence  = {1, 2, 3};
+    dummy.EulerAngles = cs.GetEulerAngles("1-2-3");
+
+    Console.CurrentFontType = 1;
+    Matrix endAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Transpose initial state and multiply by final to determine the matrix expressing
+    // attitude frame 2 (end) with respect to attitude frame 1 (start)
+
+    Matrix startToEndAttitudeMatrix =  startAttitudeMatrix.Transpose*endAttitudeMatrix;
+
+    dummy.AttitudeMatrix = startToEndAttitudeMatrix;
+    Array EulerAxisOfRotation = {dummy.Quaternion[0], dummy.Quaternion[1], dummy.Quaternion[2]};
+
+    EulerAxisOfRotation =  EulerAxisOfRotation.Normalized();
+
+    // Calculate Euler Angle of Rotation
+    Variable EulerAngleOfRotation = deg((acos(0.5*((startToEndAttitudeMatrix[0,0] + 
+    						                        startToEndAttitudeMatrix[1,1] + 
+    						                        startToEndAttitudeMatrix[2,2]) - 1))));
+
+    // Set slew rate to rotate in appropriate time
+    Variable SlewRate = EulerAngleOfRotation/maneuverTime;
+
+    slew.AngularVelocity[0] = SlewRate*EulerAxisOfRotation[0];
+    slew.AngularVelocity[1] = SlewRate*EulerAxisOfRotation[1];
+    slew.AngularVelocity[2] = SlewRate*EulerAxisOfRotation[2];
+
+    Console.CurrentFontType = 0;
+EndProcedure;
+
+
+// Contact and Visualization Setup
+
+//Block ThreeDModel Configuration
+// Create ThreeDModel Object
+ThreeDModel tdm;
+tdm.LoadModel("..\_Support_Files\cubesat.3ds");
+
+// Apply 3D model to Cloudsat spacecraft
+SolarSat.SetThreeDModel(tdm);
+SolarSat.BodyScale = 5000;
+tdm.Scale    = 5000;
+//EndBlock
+
+//Block Vector Configuration
+//Build the Vectors to represent contact with the ground sites we've specified
+List<Vector> contactVects[4];
+
+contactVects[0].BuildVector(9, SolarSat, Durand);
+contactVects[0].Color  = ColorTools.Red;
+contactVects[0].Active = 0;
+
+contactVects[2].BuildVector(9, SolarSat, Sun);
+contactVects[2].Color  = ColorTools.Gold;
+contactVects[2].Active = 0;
+
+contactVects[3].BuildVector(9, SolarSat, Earth);
+contactVects[3].Color  = ColorTools.Lime;
+contactVects[3].Active = 0;
+
+Vector vecAntiZ; //We do this because the 3D Model is backwards
+vecAntiZ.BuildVector(3, contactVects[2]);
+
+Vector vecAntiEarth;
+vecAntiEarth.BuildVector(3, contactVects[3]);
+
+CoordinateSystem csToSun;
+CoordinateSystem csToEarth;
+csToSun.BuildCoordinateSystem(3, vecAntiZ, 2, contactVects[1]);
+csToEarth.BuildCoordinateSystem(3, vecAntiEarth, 2, contactVects[2]);
+//EndBlock
+
+//Block Visibility Object Configuration
+VisibilitySegment toSun;
+VisibilitySegment toDurand;
+
+toSun.AddOccultingBody(Earth, Moon, Mercury, Venus);
+toSun.SetObserver(SolarSat);
+toSun.SetTarget(Sun);
+
+toDurand.AddOccultingBody(Earth);
+toDurand.SetObserver(Durand);
+toDurand.SetTarget(SolarSat);
+
+//EndBlock
+
+//Block Changing Attitude ViewWindow Setup
+//Create a dummy Spacecraft for ViewWindow centering
+Spacecraft viewCenter;
+viewCenter.Position = SolarSat.Position;
+viewCenter.Velocity = SolarSat.Velocity;
+
+//Set up the ViewWindow for the fixed attitude system
+ViewWindow vwFixed;
+vwFixed.AddObject(Durand);
+vwFixed.AddObject(SolarSat);
+vwFixed.AddObject(contactVects[0]);
+vwFixed.AddObject(contactVects[1]);
+vwFixed.AddObject(contactVects[2]);
+vwFixed.AddObject(viewCenter);
+vwFixed.SetShowName("Durand", 1);
+vwFixed.SetShowName("SolarSat", 1);
+vwFixed.SetShowBody("viewCenter", 0);
+
+vwFixed.AddObject(csToEarth);
+vwFixed.AddObject(csToSun);
+
+vwFixed.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwFixed.Viewpoints[0].ThreeDView.Declination    = -140;
+vwFixed.Viewpoints[0].ThreeDView.RightAscension = 310;
+
+//Set up the ViewWindow for the changing attitude system
+ViewWindow vwChangingAttitude;
+vwChangingAttitude.AddObject(Durand);
+vwChangingAttitude.AddObject(SolarSat);
+vwChangingAttitude.AddObject(contactVects[0]);
+vwChangingAttitude.AddObject(contactVects[1]);
+vwChangingAttitude.AddObject(contactVects[2]);
+vwChangingAttitude.AddObject(viewCenter);
+vwChangingAttitude.SetShowName("Durand", 1);
+vwChangingAttitude.SetShowName("SolarSat", 1);
+vwChangingAttitude.SetShowBody("viewCenter", 0);
+
+vwChangingAttitude.AddObject(csToEarth);
+vwChangingAttitude.AddObject(csToSun);
+
+vwChangingAttitude.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Declination    = -140;
+vwChangingAttitude.Viewpoints[0].ThreeDView.RightAscension = 310;
+//EndBlock
+
+//Block WindowOverlay Configuration
+WindowOverlay wo;
+wo.RemoveAllShapes();
+wo.AddShape();
+wo.Shapes[0].TextOptions.AlignmentHorizontal = 0;
+wo.Shapes[0].TextOptions.TextColor = ColorTools.White;
+wo.Shapes[0].TextOptions.Font.Size = 16;
+wo.Shapes[0].SetOrigin(0,0.01,0.01);
+wo.Shapes[0].SetSize(0,0.6,0.12);
+
+// Turn off default status text for the changing attitude ViewWindow
+vwChangingAttitude.ShowStatusText = 0;
+vwChangingAttitude.AddObject(wo);
+vwChangingAttitude.WindowTitle = "SolarSat View";
+
+// Turn off default status text for the Fixed frame ViewWindow 
+vwFixed.ShowStatusText = 0;
+vwFixed.AddObject(wo);
+vwFixed.WindowTitle = "SolarSat View";
+
+// Turn off default status text for the Earth-centered ViewWindow 
+VwEarth.ShowStatusText = 0;
+//EndBlock
+
+//Block Variable Setup
+TimeSpan EARTH_MANEUVER_TIME;
+EARTH_MANEUVER_TIME = TIMESPAN(60 seconds);
+TimeSpan SUN_MANEUVER_TIME;
+SUN_MANEUVER_TIME = TIMESPAN(200 seconds);
+Constant Variable sunManeuver   = 200;
+Constant Variable earthManeuver = 60;
+
+TimeSpan cacheEpoch;
+Variable flag = 0;
+Variable isSunSlew      = -1;
+Variable inSunlight     = 0;
+Variable isCharging     = 0;
+Variable inContactDurand = 0;
+
+// Supposing this is constantly radiated by the Sun's whole surface, 
+// the equation giving irradiance of a star of radius R and temperature K at a distance D is
+// w=5.67⋅10−8⋅T^4(R/D)^2. Solving for the Sun, where T = 5778, R = 695700 and 
+// D = 149600000 (1AU), gives us the value of 1366.7 W/m2.
+
+// Variables for Panel Power calculations
+Variable meanPower = 1366.7;			  
+Variable meanSunDistance = 149530000; //1 AU
+
+// Variables for shadow time calculations
+Variable Shadow;
+Variable ShadowPrev;
+//EndBlock
+
+
+// Attitude Setup
+
+Console.CurrentTextColor = ColorTools.Chocolate;
+If (FixedAttitude == 1);
+	// The spacecraft is fixed therefore all angles and rates go to 0
+	// Set Euler Angles 
+	SolarSat.EulerAngles[0] = 0;
+	SolarSat.EulerAngles[1] = 0;
+	SolarSat.EulerAngles[2] = 0;
+
+	// Set attitude rate of SolarSat
+
+	SolarSat.EulerRates[0] = 0;
+	SolarSat.EulerRates[1] = 0;
+	SolarSat.EulerRates[2] = 0;
+
+	Report @"You chose a fixed attitude system.\n" to Console;
+	Report  "Euler Angle 1: " + SolarSat.EulerAngles[0].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 2: " + SolarSat.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + SolarSat.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + SolarSat.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + SolarSat.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + SolarSat.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+Else;
+    Report @"You chose a changing attitude system.\n" to Console;
+End;
+
+While (Sapling.ElapsedTime < TIMESPAN(8 hours));
+
+// Panel Orientation/Attitude Convert
+
+// SolarSat.SunVector gives Sun position in MJ2000 coordinates
+// Transform the sun vector to BCS using AttitudeConvert
+SunBCS = AttitudeConvert(0,3,SolarSat,SolarSat.SunVector);
+
+// Set Solar Panel orientation
+// Keep panel aligned to Spacecraft BCS (panelVecBCS represents the Vector Normal to the Solar Array)
+PanelVecBCS = {0, 0, 1};
+
+// To examine other panel alignments, you can set a new panel orientation here:
+// panelVecBCS = {your array assignment here};
+
+
+// Shadow Calculations
+
+If (SolarSat.InShadow == 0);
+	// Calculate the angle between sun vector and panel normal
+	SunPanelAngle = PanelVecBCS.VertexAngle(SunBCS);
+
+	// Calculate power from solar panel
+	PanelPower = Efficiency*meanPower*Area*
+	abs(cos(rad(SunPanelAngle)))*
+	SolarSat.Range(Sun)/meanSunDistance;
+ElseIf (SolarSat.InShadow == 1);
+	PanelPower = 0;
+End;
+
+Shadow = SolarSat.InShadow;
+
+If (ShadowPrev != Shadow);
+    Console.CurrentTextColor = ColorTools.Khaki;
+	If (Shadow == 1);
+		Report SolarSat.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Entering Shadow" to Console;
+	Else;
+		Report SolarSat.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Leaving Shadow" to Console;
+	End;
+	ShadowPrev = Shadow;
+End;
+
+Console.CurrentTextColor = ColorTools.White;
+
+
+// Changing Attitude Setup
+
+If (FixedAttitude == 0);
+    // Block Contact Analysis
+    // Determine contact with the ground sites first
+    If (toDurand.Visibility(SolarSat.Epoch) == 1 and inContactDurand == 0);
+        inContactDurand = 1;
+    	contactVects[0].Active = 1;
+
+    	If(isCharging == 0);
+    		Console.CurrentTextColor = ColorTools.Khaki;
+    		Report "Charging has stopped... " to Console;
+		End;
+
+    	Console.CurrentTextColor = ColorTools.Red;
+        Report "Contact with Durand has begun..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 1 and inSunlight == 0);
+        inSunlight = 1;
+        contactVects[2].Active = 1;
+    	isCharging = 0;
+        
+    	Console.CurrentTextColor = ColorTools.Khaki;
+    	Report "Charging has started..." to Console;
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+    If (toDurand.Visibility(SolarSat.Epoch) == 0 and inContactDurand == 1);
+        inContactDurand = 0;
+    	contactVects[0].Active = 0;
+
+        Console.CurrentTextColor = ColorTools.Red;
+        Report "Contact with Durand has ended..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 0 and inSunlight == 1);
+        inSunlight = 0;
+    	isCharging = 1;
+        contactVects[2].Active = 0;
+        
+    	Console.CurrentTextColor = ColorTools.Khaki;
+    	Report "Charging has stopped... " to Console;
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+
+    // No contact on any groundstations 
+    If (inSunlight == 1);
+        Console.CurrentTextColor = ColorTools.Orange;
+    	SolarSat.Propagator.StepSize = TimeSpan.FromSeconds(10);
+
+        // Slew to face the sun
+        SolarSat.AttitudeRefFrame = "MJ2000";
+        Call SetSlewRate(SolarSat, sunManeuver, csToSun, 1);
+    	cacheEpoch = SolarSat.Epoch;
+        isCharging = 1;
+        isSunSlew  = 1;
+    End;
+    If (isSunSlew == 0 and flag == 0 and SolarSat.ElapsedTimeFromEpoch(cacheEpoch) >= EARTH_MANEUVER_TIME);
+        // Reset the earth slew, swap to LVLH to track the earth
+        SolarSat.AttitudeRefFrame = "LVLH";
+		SolarSat.AngularVelocity = {0, 0, 0};
+		flag = 0;
+        isSunSlew  = -1;
+	End;
+    If (isSunSlew == 1 and flag == 0 and SolarSat.ElapsedTimeFromEpoch(cacheEpoch) >= SUN_MANEUVER_TIME);
+		// Reset the sun slew, leave in MJ2K because sun is far away
+        SolarSat.AngularVelocity = {0, 0, 0};
+		flag = 0;
+        isSunSlew  = -1;
+	End;
+End;
+
+
+// Fixed Attitude Reports
+
+If (FixedAttitude == 1);
+	//Determine contact with the ground sites first
+    //Slew to face the earth
+    SolarSat.AttitudeRefFrame = "MJ2000";
+    Call SetSlewRate(SolarSat, earthManeuver, csToEarth, 0);
+    cacheEpoch = SolarSat.Epoch;
+    isCharging = 0;
+    isSunSlew  = 0;
+    
+    If (toDurand.Visibility(SolarSat.Epoch) == 1 and inContactDurand == 0);
+        inContactDurand = 1;
+        contactVects[0].Active = 1;
+    	ScDurand.Color = ColorTools.Red;
+    	ScDurand.BuildVector(9,SolarSat,Durand);
+    	ScDurand.Active = 1;
+
+        Console.CurrentTextColor = ColorTools.LightBlue;
+        Report "Contact with Durand has begun..." to Console;
+    End; 
+    If (toSun.Visibility(SolarSat.Epoch) == 1 and inSunlight == 0);
+        inSunlight = 1;
+        contactVects[2].Active = 1;
+    	ScSun.BuildVector(9,SolarSat,Sun);
+    	ScSun.Active = 1;
+
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+    If (toDurand.Visibility(SolarSat.Epoch) == 0 and inContactDurand == 1);
+        inContactDurand = 0;
+        contactVects[0].Active = 0;
+    	ScDurand.Active = 0;
+
+        Console.CurrentTextColor = ColorTools.LightBlue;
+        Report "Contact with Durand has ended..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 0 and inSunlight == 1);
+        inSunlight = 0;
+        contactVects[2].Active = 0;
+    	ScSun.Active = 0;
+
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+End;
+
+
+// Propagate and Generate Outputs
+
+Step SolarSat;
+
+//Synchronize Epochs
+contactVects[0].Epoch = SolarSat.Epoch;
+contactVects[1].Epoch = SolarSat.Epoch;
+contactVects[2].Epoch = SolarSat.Epoch;
+contactVects[3].Epoch = SolarSat.Epoch;
+vecAntiEarth.Epoch    = SolarSat.Epoch;
+vecAntiZ.Epoch        = SolarSat.Epoch;
+csToEarth.Epoch       = SolarSat.Epoch;
+csToSun.Epoch         = SolarSat.Epoch;
+
+viewCenter.Position = SolarSat.Position;
+viewCenter.Velocity = SolarSat.Velocity;
+
+csToEarth.SetPositionVector(vecAntiEarth);
+csToEarth.VisualScale = 500;
+csToSun.SetPositionVector(vecAntiEarth);
+csToSun.VisualScale = 500;
+
+// Update customized status text
+wo.Shapes[0].TextOptions.Text = SolarSat.EpochText + @" UTC\n" +
+                                "Sun Panel Angle: " + SunPanelAngle.Value.Format("%.1f") + @"\n" + 
+                                "Beta Angle: "      + SolarSat.BetaAngle.Format("%.1f");
+
+// Update all OutputWindow objects as appropriate
+Update DataTableWindow1;
+Update PowerPlot;
+Update VwEarth;
+Switch (FixedAttitude);
+    Case 0:
+        Update vwChangingAttitude;
+        Break;
+    Case 1:
+        Update vwFixed;
+        Break;
+End;
+
+// Generate Reports
+Report SolarSat.EpochText, Area,SunPanelAngle<8,3>, SolarSat.Range(Sun)<8,3>, PanelPower<8,3> to "..\_Output_Files\SolarPower_PanelPower.txt";
+Report SolarSat.ShadowTimes() to "..\_Output_Files\SolarPower_ShadowTimes.txt";
+
+End;]]></ProjectScript>
+  <ProjectNotes></ProjectNotes>
+</FreeFlyerProjectFile>;
+	Report  "Euler Angle 2: " + SolarSat.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + SolarSat.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + SolarSat.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + SolarSat.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + SolarSat.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+Else;
+    Report @"You chose a changing attitude system.\n" to Console;
+End;
+
+While (Sapling.ElapsedTime < TIMESPAN(8 hours));
+
+// Panel Orientation/Attitude Convert
+
+// SolarSat.SunVector gives Sun position in MJ2000 coordinates
+// Transform the sun vector to BCS using AttitudeConvert
+SunBCS = AttitudeConvert(0,3,SolarSat,SolarSat.SunVector);
+
+// Set Solar Panel orientation
+// Keep panel aligned to Spacecraft BCS (panelVecBCS represents the Vector Normal to the Solar Array)
+PanelVecBCS = {0, 0, 1};
+
+// To examine other panel alignments, you can set a new panel orientation here:
+// panelVecBCS = {your array assignment here};
+
+
+// Shadow Calculations
+
+If (SolarSat.InShadow == 0);
+	// Calculate the angle between sun vector and panel normal
+	SunPanelAngle = PanelVecBCS.VertexAngle(SunBCS);
+
+	// Calculate power from solar panel
+	PanelPower = Efficiency*meanPower*Area*
+	abs(cos(rad(SunPanelAngle)))*
+	SolarSat.Range(Sun)/meanSunDistance;
+ElseIf (SolarSat.InShadow == 1);
+	PanelPower = 0;
+End;
+
+Shadow = SolarSat.InShadow;
+
+If (ShadowPrev != Shadow);
+    Console.CurrentTextColor = ColorTools.Khaki;
+	If (Shadow == 1);
+		Report SolarSat.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Entering Shadow" to Console;
+	Else;
+		Report SolarSat.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Leaving Shadow" to Console;
+	End;
+	ShadowPrev = Shadow;
+End;
+
+Console.CurrentTextColor = ColorTools.White;
+
+
+// Changing Attitude Setup
+
+If (FixedAttitude == 0);
+    // Block Contact Analysis
+    // Determine contact with the ground sites first
+    If (toDurand.Visibility(SolarSat.Epoch) == 1 and inContactDurand == 0);
+        inContactDurand = 1;
+    	contactVects[0].Active = 1;
+
+    	If(isCharging == 0);
+    		Console.CurrentTextColor = ColorTools.Khaki;
+    		Report "Charging has stopped... " to Console;
+		End;
+
+    	Console.CurrentTextColor = ColorTools.Red;
+        Report "Contact with Durand has begun..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 1 and inSunlight == 0);
+        inSunlight = 1;
+        contactVects[2].Active = 1;
+    	isCharging = 0;
+        
+    	Console.CurrentTextColor = ColorTools.Khaki;
+    	Report "Charging has started..." to Console;
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+    If (toDurand.Visibility(SolarSat.Epoch) == 0 and inContactDurand == 1);
+        inContactDurand = 0;
+    	contactVects[0].Active = 0;
+
+        Console.CurrentTextColor = ColorTools.Red;
+        Report "Contact with Durand has ended..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 0 and inSunlight == 1);
+        inSunlight = 0;
+    	isCharging = 1;
+        contactVects[2].Active = 0;
+        
+    	Console.CurrentTextColor = ColorTools.Khaki;
+    	Report "Charging has stopped... " to Console;
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+
+    // No contact on any groundstations 
+    If (inSunlight == 1);
+        Console.CurrentTextColor = ColorTools.Orange;
+    	SolarSat.Propagator.StepSize = TimeSpan.FromSeconds(10);
+
+        // Slew to face the sun
+        SolarSat.AttitudeRefFrame = "MJ2000";
+        Call SetSlewRate(SolarSat, sunManeuver, csToSun, 1);
+    	cacheEpoch = SolarSat.Epoch;
+        isCharging = 1;
+        isSunSlew  = 1;
+    End;
+    If (isSunSlew == 0 and flag == 0 and SolarSat.ElapsedTimeFromEpoch(cacheEpoch) >= EARTH_MANEUVER_TIME);
+        // Reset the earth slew, swap to LVLH to track the earth
+        SolarSat.AttitudeRefFrame = "LVLH";
+		SolarSat.AngularVelocity = {0, 0, 0};
+		flag = 0;
+        isSunSlew  = -1;
+	End;
+    If (isSunSlew == 1 and flag == 0 and SolarSat.ElapsedTimeFromEpoch(cacheEpoch) >= SUN_MANEUVER_TIME);
+		// Reset the sun slew, leave in MJ2K because sun is far away
+        SolarSat.AngularVelocity = {0, 0, 0};
+		flag = 0;
+        isSunSlew  = -1;
+	End;
+End;
+
+
+// Fixed Attitude Reports
+
+If (FixedAttitude == 1);
+	//Determine contact with the ground sites first
+    //Slew to face the earth
+    SolarSat.AttitudeRefFrame = "MJ2000";
+    Call SetSlewRate(SolarSat, earthManeuver, csToEarth, 0);
+    cacheEpoch = SolarSat.Epoch;
+    isCharging = 0;
+    isSunSlew  = 0;
+    
+    If (toDurand.Visibility(SolarSat.Epoch) == 1 and inContactDurand == 0);
+        inContactDurand = 1;
+        contactVects[0].Active = 1;
+    	ScDurand.Color = ColorTools.Red;
+    	ScDurand.BuildVector(9,SolarSat,Durand);
+    	ScDurand.Active = 1;
+
+        Console.CurrentTextColor = ColorTools.LightBlue;
+        Report "Contact with Durand has begun..." to Console;
+    End; 
+    If (toSun.Visibility(SolarSat.Epoch) == 1 and inSunlight == 0);
+        inSunlight = 1;
+        contactVects[2].Active = 1;
+    	ScSun.BuildVector(9,SolarSat,Sun);
+    	ScSun.Active = 1;
+
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+    If (toDurand.Visibility(SolarSat.Epoch) == 0 and inContactDurand == 1);
+        inContactDurand = 0;
+        contactVects[0].Active = 0;
+    	ScDurand.Active = 0;
+
+        Console.CurrentTextColor = ColorTools.LightBlue;
+        Report "Contact with Durand has ended..." to Console;
+    End;
+    If (toSun.Visibility(SolarSat.Epoch) == 0 and inSunlight == 1);
+        inSunlight = 0;
+        contactVects[2].Active = 0;
+    	ScSun.Active = 0;
+
+        Console.CurrentTextColor = ColorTools.Khaki;
+    End;
+End;
+
+
+// Propagate and Generate Outputs
+
+Step SolarSat;
+
+//Synchronize Epochs
+contactVects[0].Epoch = SolarSat.Epoch;
+contactVects[1].Epoch = SolarSat.Epoch;
+contactVects[2].Epoch = SolarSat.Epoch;
+contactVects[3].Epoch = SolarSat.Epoch;
+vecAntiEarth.Epoch    = SolarSat.Epoch;
+vecAntiZ.Epoch        = SolarSat.Epoch;
+csToEarth.Epoch       = SolarSat.Epoch;
+csToSun.Epoch         = SolarSat.Epoch;
+
+viewCenter.Position = SolarSat.Position;
+viewCenter.Velocity = SolarSat.Velocity;
+
+csToEarth.SetPositionVector(vecAntiEarth);
+csToEarth.VisualScale = 500;
+csToSun.SetPositionVector(vecAntiEarth);
+csToSun.VisualScale = 500;
+
+// Update customized status text
+wo.Shapes[0].TextOptions.Text = SolarSat.EpochText + @" UTC\n" +
+                                "Sun Panel Angle: " + SunPanelAngle.Value.Format("%.1f") + @"\n" + 
+                                "Beta Angle: "      + SolarSat.BetaAngle.Format("%.1f");
+
+// Update all OutputWindow objects as appropriate
+Update DataTableWindow1;
+Update PowerPlot;
+Update VwEarth;
+Switch (FixedAttitude);
+    Case 0:
+        Update vwChangingAttitude;
+        Break;
+    Case 1:
+        Update vwFixed;
+        Break;
+End;
+
+// Generate Reports
+Report SolarSat.EpochText, Area,SunPanelAngle<8,3>, SolarSat.Range(Sun)<8,3>, PanelPower<8,3> to "..\_Output_Files\SolarPower_PanelPower.txt";
+Report SolarSat.ShadowTimes() to "..\_Output_Files\SolarPower_ShadowTimes.txt";
+
+End;]]></ProjectScript>
+  <ProjectNotes></ProjectNotes>
+</FreeFlyerProjectFile>Epoch        = SolarSat.Epoch;
+csToEarth.Epoch       = SolarSat.Epoch;
+csToSun.Epoch         = SolarSat.Epoch;
+
+viewCenter.Position = SolarSat.Position;
+viewCenter.Velocity = SolarSat.Velocity;
+
+csToEarth.SetPositionVector(vecAntiEarth);
+csToEarth.VisualScale = 500;
+csToSun.SetPositionVector(vecAntiEarth);
+csToSun.VisualScale = 500;
+
+// Update customized status text
+wo.Shapes[0].TextOptions.Text = SolarSat.EpochText + @" UTC\n" +
+                                "Sun Panel Angle: " + SunPanelAngle.Value.Format("%.1f") + @"\n" + 
+                                "Beta Angle: "      + SolarSat.BetaAngle.Format("%.1f");
+
+// Update all OutputWindow objects as appropriate
+Update DataTableWindow1;
+Update PowerPlot;
+Update VwEarth;
+Switch (FixedAttitude);
+    Case 0:
+        Update vwChangingAttitude;
+        Break;
+    Case 1:
+        Update vwFixed;
+        Break;
+End;
+
+// Generate Reports
+Report SolarSat.EpochText, Area,SunPanelAngle<8,3>, SolarSat.Range(Sun)<8,3>, PanelPower<8,3> to "..\_Output_Files\SolarPower_PanelPower.txt";
+Report SolarSat.ShadowTimes() to "..\_Output_Files\SolarPower_ShadowTimes.txt";
+
+End;]]></ProjectScript>
+  <ProjectNotes></ProjectNotes>
+</FreeFlyerProjectFile>

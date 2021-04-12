@@ -25,8 +25,8 @@ End;
 
 Struct EPS;
 	List<SolarPanel> Panels;
-	Array SunBCS[10];
-	Array PanelVecBCS[3];
+	Array SunBCS;
+	Array PanelVecBCS;
 End;
 
 Struct SpacecraftVectors;
@@ -47,9 +47,11 @@ MetaSpacecraft MetaSC;
 // Configuration
 //----------------------------------------------------------------------------------------
 MetaSC.FixedAttitude = 1.0;      			// Boolean  	: 0 for changing attitude
-MetaSC.eps.Panels.Length++;
+MetaSC.eps.Panels.Count++;
 MetaSC.eps.Panels[0].Area = 0.01;        	// m^2      	: Value from 0 to 25
 MetaSC.eps.Panels[0].Efficiency = 0.3;   	// unitless 	: Value from -1.0 to 1.0
+MetaSC.eps.SunBCS.Dimension = 10;
+MetaSC.eps.PanelVecBCS.Dimension = 3;
 
 //----------------------------------------------------------------------------------------
 // Spacecraft
@@ -77,8 +79,8 @@ Durand.Longitude = -122.1733; // East of the prime meridian
 ViewWindow VwEarth({
 	MetaSC.sc,
 	Durand,
-	MetaSC.sc.vectors.ToDurand;,
-	MetaSC.sc.vectors.ToSun;
+	MetaSC.vectors.ToDurand,
+	MetaSC.vectors.ToSun
 });
 
 DataTableWindow DataTable({
@@ -199,7 +201,6 @@ csToEarth.BuildCoordinateSystem(3, vecAntiEarth, 2, contactVects[2]);
 //----------------------------------------------------------------------------------------
 // Visibility Calculation
 //----------------------------------------------------------------------------------------
-Visibility Object Configuration
 VisibilitySegment toSun;
 VisibilitySegment toDurand;
 
@@ -214,7 +215,6 @@ toDurand.SetTarget(MetaSC.sc);
 //----------------------------------------------------------------------------------------
 // Changing Attitude
 //----------------------------------------------------------------------------------------
-ViewWindow Setup
 //Create a dummy Spacecraft for ViewWindow centering
 Spacecraft viewCenter;
 viewCenter.Position = MetaSC.sc.Position;
@@ -482,9 +482,9 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 1 and inContactDurand == 0);
 	        inContactDurand = 1;
 	        contactVects[0].Active = 1;
-	    	MetaSC.sc.vectors.ToDurand.Color = ColorTools.Red;
-	    	MetaSC.sc.vectors.ToDurand.BuildVector(9,MetaSC.sc,Durand);
-	    	MetaSC.sc.vectors.ToDurand.Active = 1;
+	    	MetaSC.vectors.ToDurand.Color = ColorTools.Red;
+	    	MetaSC.vectors.ToDurand.BuildVector(9,MetaSC.sc,Durand);
+	    	MetaSC.vectors.ToDurand.Active = 1;
 	
 	        Console.CurrentTextColor = ColorTools.LightBlue;
 	        Report "Contact with Durand has begun..." to Console;
@@ -493,8 +493,8 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	    If (toSun.Visibility(MetaSC.sc.Epoch) == 1 and inSunlight == 0);
 	        inSunlight = 1;
 	        contactVects[2].Active = 1;
-	    	MetaSC.sc.vectors.ToSun.BuildVector(9,MetaSC.sc,Sun);
-	    	MetaSC.sc.vectors.ToSun.Active = 1;
+	    	MetaSC.vectors.ToSun.BuildVector(9,MetaSC.sc,Sun);
+	    	MetaSC.vectors.ToSun.Active = 1;
 	
 	        Console.CurrentTextColor = ColorTools.Khaki;
 	    End;
@@ -502,7 +502,7 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 0 and inContactDurand == 1);
 	        inContactDurand = 0;
 	        contactVects[0].Active = 0;
-	    	MetaSC.sc.vectors.ToDurand.Active = 0;
+	    	MetaSC.vectors.ToDurand.Active = 0;
 	
 	        Console.CurrentTextColor = ColorTools.LightBlue;
 	        Report "Contact with Durand has ended..." to Console;
@@ -511,7 +511,7 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	    If (toSun.Visibility(MetaSC.sc.Epoch) == 0 and inSunlight == 1);
 	        inSunlight = 0;
 	        contactVects[2].Active = 0;
-	    	MetaSC.sc.vectors.ToSun.Active = 0;
+	    	MetaSC.vectors.ToSun.Active = 0;
 	        Console.CurrentTextColor = ColorTools.Khaki;
 	    End;
 	End;

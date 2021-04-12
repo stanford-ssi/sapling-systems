@@ -1,0 +1,564 @@
+// Mission Plan Description and Console Setup
+
+// Console Setup
+Console.BackColor = ColorTools.Black;
+Console.CurrentTextColor = ColorTools.White;
+Console.Dimension = 35;
+Console.DockMode = 3;
+Console.WordWrap = 1;
+Console.Show();
+
+Report "This Mission Plan calculates solar power available from a solar array which is fixed to the body frame of a Spacecraft." +
+      @"You can view the effect of changing the Spacecraft attitude by selecting 'Changing Attitude' in the somewhere at the beginning of each run.\n" to Console;
+
+Report "If you select 'Changing Attitude' the satellite will reorient to face the Sun (when the Sun is in view) when not over a ground station.\n" to Console;
+
+//----------------------------------------------------------------------------------------
+// Meta Struct Definition
+//----------------------------------------------------------------------------------------
+Struct SolarPanel;
+	Variable Area; 			// m^2
+	Variable Efficiency; 	// unitless
+	Variable Power; 		// W, calculated
+	Variable SunPanelAngle; // calculated
+End;
+
+Struct EPS;
+	List<SolarPanel> Panels;
+	Array SunBCS[10];
+	Array PanelVecBCS[3];
+End;
+
+Struct SpacecraftVectors;
+	Vector ToSun;
+	Vector ToDurand;
+End;
+
+Struct MetaSpacecraft;
+	Spacecraft sc;
+	SpacecraftVectors vectors;
+	EPS eps;
+	Variable FixedAttitude;
+End;
+
+MetaSpacecraft MetaSC;
+
+//----------------------------------------------------------------------------------------
+// Configuration
+//----------------------------------------------------------------------------------------
+MetaSC.FixedAttitude = 1.0;      			// Boolean  	: 0 for changing attitude
+MetaSC.eps.Panels.Length++;
+MetaSC.eps.Panels[0].Area = 0.01;        	// m^2      	: Value from 0 to 25
+MetaSC.eps.Panels[0].Efficiency = 0.3;   	// unitless 	: Value from -1.0 to 1.0
+
+//----------------------------------------------------------------------------------------
+// Spacecraft
+//----------------------------------------------------------------------------------------
+MetaSC.sc.VehicleDryMass = 1.33;
+MetaSC.sc.A = 7083.1364;
+MetaSC.sc.E = 0.0;
+MetaSC.sc.I = 98.2083789592433;
+MetaSC.sc.RAAN = 280.26791820885;
+MetaSC.sc.W = 171.130489033293;
+MetaSC.sc.TA = 171.130489033293;
+MetaSC.sc.VehicleDryMOI = [1200,0,0;0,1200,0;0,0,1200];
+
+//----------------------------------------------------------------------------------------
+// GroundStation
+//----------------------------------------------------------------------------------------
+GroundStation Durand;
+Durand.Height = 70;
+Durand.Latitude = 37.4269;
+Durand.Longitude = -122.1733; // East of the prime meridian
+
+//----------------------------------------------------------------------------------------
+// Output Windows
+//----------------------------------------------------------------------------------------
+ViewWindow VwEarth({
+	MetaSC.sc,
+	Durand,
+	MetaSC.sc.vectors.ToDurand;,
+	MetaSC.sc.vectors.ToSun;
+});
+
+DataTableWindow DataTable({
+	MetaSC.sc.EpochText,
+	MetaSC.eps.Panels[0].SunPanelAngle, // TODO implement SC with metadata struct
+	MetaSC.sc.Range(Sun),
+	MetaSC.eps.Panels[0].Power
+});
+
+DataTable.WindowTitle = "Outputs";
+
+PlotWindow PowerPlot({
+	MetaSC.sc.ElapsedTime,
+	MetaSC.eps.Panels[0].Power // TODO
+});
+
+PowerPlot.PlotType = "XYPlot";
+PowerPlot.XAxis.Title.Text  = "Elapsed Time (Days)";
+PowerPlot.YAxis.Title.Text = "Power (W)";
+PowerPlot.ShowGridLines = 1;
+
+ReportInterface ReportInterface1;
+
+//----------------------------------------------------------------------------------------
+// Report Configuration Procedure
+//----------------------------------------------------------------------------------------
+// Report configuration to Console;
+
+//----------------------------------------------------------------------------------------
+// Slew Procedure
+//----------------------------------------------------------------------------------------
+Define Procedure SetSlewRate(Spacecraft slew, Variable maneuverTime, CoordinateSystem cs, Variable doConsoleOutput);
+    // General Approach:
+    //   Determine the orientation of the end frame with respect to the start frame.
+    //   The euler axis of rotation is the normalization of the first three elements of the quaternion
+    //   Set the Angular Velocity vector to point along this euler axis of rotation
+    //   Propagate spacecraft until the slew angle is equal to the Euler Angle of Rotation
+
+    // Obtain the attitude matrix depicting the starting orientation wrt the reference frame
+    Spacecraft dummy = slew;
+    dummy.AttitudeRefFrame = slew.AttitudeRefFrame;
+    Matrix startAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Obtain the attitude matrix depicting the ending orientation wrt the reference frame
+    dummy.EulerSequence  = {1, 2, 3};
+    dummy.EulerAngles = cs.GetEulerAngles("1-2-3");
+
+    Console.CurrentFontType = 1;
+    Matrix endAttitudeMatrix = dummy.AttitudeMatrix;
+
+    // Transpose initial state and multiply by final to determine the matrix expressing
+    // attitude frame 2 (end) with respect to attitude frame 1 (start)
+
+    Matrix startToEndAttitudeMatrix =  startAttitudeMatrix.Transpose*endAttitudeMatrix;
+
+    dummy.AttitudeMatrix = startToEndAttitudeMatrix;
+    Array EulerAxisOfRotation = {dummy.Quaternion[0], dummy.Quaternion[1], dummy.Quaternion[2]};
+
+    EulerAxisOfRotation =  EulerAxisOfRotation.Normalized();
+
+    // Calculate Euler Angle of Rotation
+    Variable EulerAngleOfRotation = deg((acos(0.5*((startToEndAttitudeMatrix[0,0] + 
+    						                        startToEndAttitudeMatrix[1,1] + 
+    						                        startToEndAttitudeMatrix[2,2]) - 1))));
+
+    // Set slew rate to rotate in appropriate time
+    Variable SlewRate = EulerAngleOfRotation/maneuverTime;
+
+    slew.AngularVelocity[0] = SlewRate*EulerAxisOfRotation[0];
+    slew.AngularVelocity[1] = SlewRate*EulerAxisOfRotation[1];
+    slew.AngularVelocity[2] = SlewRate*EulerAxisOfRotation[2];
+
+    Console.CurrentFontType = 0;
+EndProcedure;
+
+//----------------------------------------------------------------------------------------
+// Contact and Visualization Setup
+//----------------------------------------------------------------------------------------
+
+// ThreeDModel Configuration
+// Create ThreeDModel Object
+ThreeDModel tdm;
+tdm.LoadModel("../visualization/3u_structure.3ds");
+
+// Apply 3D model to MetaSC.sc
+MetaSC.sc.SetThreeDModel(tdm);
+MetaSC.sc.BodyScale = 5000;
+tdm.Scale    = 5000;
+//EndBlock
+
+//Block Vector Configuration
+//Build the Vectors to represent contact with the ground sites we've specified
+List<Vector> contactVects[4];
+
+contactVects[0].BuildVector(9, MetaSC.sc, Durand);
+contactVects[0].Color  = ColorTools.Red;
+contactVects[0].Active = 0;
+
+contactVects[2].BuildVector(9, MetaSC.sc, Sun);
+contactVects[2].Color  = ColorTools.Gold;
+contactVects[2].Active = 0;
+
+contactVects[3].BuildVector(9, MetaSC.sc, Earth);
+contactVects[3].Color  = ColorTools.Lime;
+contactVects[3].Active = 0;
+
+Vector vecAntiZ; // We do this because the 3D Model is backwards
+vecAntiZ.BuildVector(3, contactVects[2]);
+
+Vector vecAntiEarth;
+vecAntiEarth.BuildVector(3, contactVects[3]);
+
+CoordinateSystem csToSun;
+CoordinateSystem csToEarth;
+csToSun.BuildCoordinateSystem(3, vecAntiZ, 2, contactVects[1]);
+csToEarth.BuildCoordinateSystem(3, vecAntiEarth, 2, contactVects[2]);
+
+//----------------------------------------------------------------------------------------
+// Visibility Calculation
+//----------------------------------------------------------------------------------------
+Visibility Object Configuration
+VisibilitySegment toSun;
+VisibilitySegment toDurand;
+
+toSun.AddOccultingBody(Earth, Moon, Mercury, Venus);
+toSun.SetObserver(MetaSC.sc);
+toSun.SetTarget(Sun);
+
+toDurand.AddOccultingBody(Earth);
+toDurand.SetObserver(Durand);
+toDurand.SetTarget(MetaSC.sc);
+
+//----------------------------------------------------------------------------------------
+// Changing Attitude
+//----------------------------------------------------------------------------------------
+ViewWindow Setup
+//Create a dummy Spacecraft for ViewWindow centering
+Spacecraft viewCenter;
+viewCenter.Position = MetaSC.sc.Position;
+viewCenter.Velocity = MetaSC.sc.Velocity;
+
+//Set up the ViewWindow for the fixed attitude system
+ViewWindow vwFixed;
+vwFixed.AddObject(Durand);
+vwFixed.AddObject(MetaSC.sc);
+vwFixed.AddObject(contactVects[0]);
+vwFixed.AddObject(contactVects[1]);
+vwFixed.AddObject(contactVects[2]);
+vwFixed.AddObject(viewCenter);
+vwFixed.SetShowName("Durand", 1);
+vwFixed.SetShowName("MetaSC.sc", 1);
+vwFixed.SetShowBody("viewCenter", 0);
+
+vwFixed.AddObject(csToEarth);
+vwFixed.AddObject(csToSun);
+
+vwFixed.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwFixed.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwFixed.Viewpoints[0].ThreeDView.Declination    = -140;
+vwFixed.Viewpoints[0].ThreeDView.RightAscension = 310;
+
+//Set up the ViewWindow for the changing attitude system
+ViewWindow vwChangingAttitude;
+vwChangingAttitude.AddObject(Durand);
+vwChangingAttitude.AddObject(MetaSC.sc);
+vwChangingAttitude.AddObject(contactVects[0]);
+vwChangingAttitude.AddObject(contactVects[1]);
+vwChangingAttitude.AddObject(contactVects[2]);
+vwChangingAttitude.AddObject(viewCenter);
+vwChangingAttitude.SetShowName("Durand", 1);
+vwChangingAttitude.SetShowName("MetaSC.sc", 1);
+vwChangingAttitude.SetShowBody("viewCenter", 0);
+
+vwChangingAttitude.AddObject(csToEarth);
+vwChangingAttitude.AddObject(csToSun);
+
+vwChangingAttitude.Viewpoints[0].ThreeDView.Source         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Target         = viewCenter.ObjectId;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Radius         = 1500;
+vwChangingAttitude.Viewpoints[0].ThreeDView.Declination    = -140;
+vwChangingAttitude.Viewpoints[0].ThreeDView.RightAscension = 310;
+//EndBlock
+
+//----------------------------------------------------------------------------------------
+// WindowOverlay Configuration
+//----------------------------------------------------------------------------------------
+WindowOverlay wo;
+wo.RemoveAllShapes();
+wo.AddShape();
+wo.Shapes[0].TextOptions.AlignmentHorizontal = 0;
+wo.Shapes[0].TextOptions.TextColor = ColorTools.White;
+wo.Shapes[0].TextOptions.Font.Size = 16;
+wo.Shapes[0].SetOrigin(0,0.01,0.01);
+wo.Shapes[0].SetSize(0,0.6,0.12);
+
+// Turn off default status text for the changing attitude ViewWindow
+vwChangingAttitude.ShowStatusText = 0;
+vwChangingAttitude.AddObject(wo);
+vwChangingAttitude.WindowTitle = "MetaSC.sc View";
+
+// Turn off default status text for the Fixed frame ViewWindow 
+vwFixed.ShowStatusText = 0;
+vwFixed.AddObject(wo);
+vwFixed.WindowTitle = "MetaSC.sc View";
+
+// Turn off default status text for the Earth-centered ViewWindow 
+VwEarth.ShowStatusText = 0;
+
+//----------------------------------------------------------------------------------------
+// Variable Setup
+//---------------------------------------------------------------------------------------- 
+TimeSpan EARTH_MANEUVER_TIME;
+EARTH_MANEUVER_TIME = TIMESPAN(60 seconds);
+TimeSpan SUN_MANEUVER_TIME;
+SUN_MANEUVER_TIME = TIMESPAN(200 seconds);
+Constant Variable sunManeuver   = 200;
+Constant Variable earthManeuver = 60;
+
+TimeSpan cacheEpoch;
+Variable flag = 0;
+Variable isSunSlew      = -1;
+Variable inSunlight     = 0;
+Variable isCharging     = 0;
+Variable inContactDurand = 0;
+
+// Supposing this is constantly radiated by the Sun's whole surface, 
+// the equation giving irradiance of a star of radius R and temperature K at a distance D is
+// w=5.67⋅10−8⋅T^4(R/D)^2. Solving for the Sun, where T = 5778, R = 695700 and 
+// D = 149600000 (1AU), gives us the value of 1366.7 W/m2.
+
+// Variables for Panel Power calculations
+Variable meanPower = 1366.7;			  
+Variable meanSunDistance = 149530000; //1 AU
+
+// Variables for shadow time calculations
+Variable Shadow;
+Variable ShadowPrev;
+
+//----------------------------------------------------------------------------------------
+// Attitude Setup
+//----------------------------------------------------------------------------------------
+Console.CurrentTextColor = ColorTools.Chocolate;
+If (MetaSC.FixedAttitude == 1);
+	// The spacecraft is fixed therefore all angles and rates go to 0
+	// Set Euler Angles 
+	MetaSC.sc.EulerAngles[0] = 0;
+	MetaSC.sc.EulerAngles[1] = 0;
+	MetaSC.sc.EulerAngles[2] = 0;
+
+	// Set attitude rate of MetaSC.sc
+
+	MetaSC.sc.EulerRates[0] = 0;
+	MetaSC.sc.EulerRates[1] = 0;
+	MetaSC.sc.EulerRates[2] = 0;
+
+	Report @"You chose a fixed attitude system.\n" to Console;
+	Report  "Euler Angle 1: " + MetaSC.sc.EulerAngles[0].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 2: " + MetaSC.sc.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + MetaSC.sc.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + MetaSC.sc.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + MetaSC.sc.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + MetaSC.sc.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+Else;
+    Report @"You chose a changing attitude system.\n" to Console;
+End;
+
+//----------------------------------------------------------------------------------------
+// Main Loop (Propagation)
+//----------------------------------------------------------------------------------------
+While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
+	
+	// Panel Orientation/Attitude Convert
+	
+	// MetaSC.sc.SunVector gives Sun position in MJ2000 coordinates
+	// Transform the sun vector to BCS using AttitudeConvert
+	MetaSC.eps.SunBCS = AttitudeConvert(0,3,MetaSC.sc,MetaSC.sc.SunVector);
+	
+	// Set Solar Panel orientation
+	// Keep panel aligned to Spacecraft BCS (MetaSC.eps.PanelVecBCS represents the Vector Normal to the Solar Array)
+	MetaSC.eps.PanelVecBCS = {0, 0, 1};
+	
+	// To examine other panel alignments, you can set a new panel orientation here:
+	// MetaSC.eps.PanelVecBCS = {your array assignment here};
+	
+	
+	// Shadow Calculations
+	
+	If (MetaSC.sc.InShadow == 0);
+		// Calculate the angle between sun vector and panel normal
+		MetaSC.eps.Panels[0].SunPanelAngle = MetaSC.eps.PanelVecBCS.VertexAngle(MetaSC.eps.SunBCS);
+	
+		// Calculate power from solar panel
+		MetaSC.eps.Panels[0].Power = MetaSC.eps.Panels[0].Efficiency*meanPower*MetaSC.eps.Panels[0].Area* //  TODO update to fancy panel method
+		abs(cos(rad(MetaSC.eps.Panels[0].SunPanelAngle)))*
+		MetaSC.sc.Range(Sun)/meanSunDistance;
+	ElseIf (MetaSC.sc.InShadow == 1);
+		MetaSC.eps.Panels[0].Power = 0;
+	End;
+	
+	Shadow = MetaSC.sc.InShadow;
+	
+	If (ShadowPrev != Shadow);
+	    Console.CurrentTextColor = ColorTools.Khaki;
+		If (Shadow == 1);
+			Report MetaSC.sc.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Entering Shadow" to Console;
+		Else;
+			Report MetaSC.sc.Epoch.ConvertToCalendarDate("Mmm DD hh:mm:ss"), ": Leaving Shadow" to Console;
+		End;
+		ShadowPrev = Shadow;
+	End;
+	
+	Console.CurrentTextColor = ColorTools.White;
+	
+	// Changing Attitude Setup
+	If (MetaSC.FixedAttitude == 0);
+
+	    // Block Contact Analysis
+	    // Determine contact with the ground sites first
+	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 1 and inContactDurand == 0);
+	        inContactDurand = 1;
+	    	contactVects[0].Active = 1;
+	
+	    	If(isCharging == 0);
+	    		Console.CurrentTextColor = ColorTools.Khaki;
+	    		Report "Charging has stopped... " to Console;
+			End;
+	
+	    	Console.CurrentTextColor = ColorTools.Red;
+	        Report "Contact with Durand has begun..." to Console;
+	    End;
+
+	    If (toSun.Visibility(MetaSC.sc.Epoch) == 1 and inSunlight == 0);
+	        inSunlight = 1;
+	        contactVects[2].Active = 1;
+	    	isCharging = 0;
+	        
+	    	Console.CurrentTextColor = ColorTools.Khaki;
+	    	Report "Charging has started..." to Console;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+
+	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 0 and inContactDurand == 1);
+	        inContactDurand = 0;
+	    	contactVects[0].Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.Red;
+	        Report "Contact with Durand has ended..." to Console;
+	    End;
+
+	    If (toSun.Visibility(MetaSC.sc.Epoch) == 0 and inSunlight == 1);
+	        inSunlight = 0;
+	    	isCharging = 1;
+	        contactVects[2].Active = 0;
+	        
+	    	Console.CurrentTextColor = ColorTools.Khaki;
+	    	Report "Charging has stopped... " to Console;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	
+	    // No contact on any groundstations 
+	    If (inSunlight == 1);
+	        Console.CurrentTextColor = ColorTools.Orange;
+	    	MetaSC.sc.Propagator.StepSize = TimeSpan.FromSeconds(10);
+	
+	        // Slew to face the sun
+	        MetaSC.sc.AttitudeRefFrame = "MJ2000";
+	        Call SetSlewRate(MetaSC.sc, sunManeuver, csToSun, 1);
+	    	cacheEpoch = MetaSC.sc.Epoch;
+	        isCharging = 1;
+	        isSunSlew  = 1;
+	    End;
+
+	    If (isSunSlew == 0 and flag == 0 and MetaSC.sc.ElapsedTimeFromEpoch(cacheEpoch) >= EARTH_MANEUVER_TIME);
+	        // Reset the earth slew, swap to LVLH to track the earth
+	        MetaSC.sc.AttitudeRefFrame = "LVLH";
+			MetaSC.sc.AngularVelocity = {0, 0, 0};
+			flag = 0;
+	        isSunSlew  = -1;
+		End;
+
+	    If (isSunSlew == 1 and flag == 0 and MetaSC.sc.ElapsedTimeFromEpoch(cacheEpoch) >= SUN_MANEUVER_TIME);
+			// Reset the sun slew, leave in MJ2K because sun is far away
+	        MetaSC.sc.AngularVelocity = {0, 0, 0};
+			flag = 0;
+	        isSunSlew  = -1;
+		End;
+	End;
+	
+	
+	// Fixed Attitude Reports
+	If (MetaSC.FixedAttitude == 1);
+		//Determine contact with the ground sites first
+	    //Slew to face the earth
+	    MetaSC.sc.AttitudeRefFrame = "MJ2000";
+	    Call SetSlewRate(MetaSC.sc, earthManeuver, csToEarth, 0);
+	    cacheEpoch = MetaSC.sc.Epoch;
+	    isCharging = 0;
+	    isSunSlew  = 0;
+	    
+	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 1 and inContactDurand == 0);
+	        inContactDurand = 1;
+	        contactVects[0].Active = 1;
+	    	MetaSC.sc.vectors.ToDurand.Color = ColorTools.Red;
+	    	MetaSC.sc.vectors.ToDurand.BuildVector(9,MetaSC.sc,Durand);
+	    	MetaSC.sc.vectors.ToDurand.Active = 1;
+	
+	        Console.CurrentTextColor = ColorTools.LightBlue;
+	        Report "Contact with Durand has begun..." to Console;
+	    End; 
+
+	    If (toSun.Visibility(MetaSC.sc.Epoch) == 1 and inSunlight == 0);
+	        inSunlight = 1;
+	        contactVects[2].Active = 1;
+	    	MetaSC.sc.vectors.ToSun.BuildVector(9,MetaSC.sc,Sun);
+	    	MetaSC.sc.vectors.ToSun.Active = 1;
+	
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+
+	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 0 and inContactDurand == 1);
+	        inContactDurand = 0;
+	        contactVects[0].Active = 0;
+	    	MetaSC.sc.vectors.ToDurand.Active = 0;
+	
+	        Console.CurrentTextColor = ColorTools.LightBlue;
+	        Report "Contact with Durand has ended..." to Console;
+	    End;
+
+	    If (toSun.Visibility(MetaSC.sc.Epoch) == 0 and inSunlight == 1);
+	        inSunlight = 0;
+	        contactVects[2].Active = 0;
+	    	MetaSC.sc.vectors.ToSun.Active = 0;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	End;
+	
+	
+	// Propagate and Generate Outputs
+	
+	Step MetaSC.sc;
+	
+	//Synchronize Epochs
+	contactVects[0].Epoch = MetaSC.sc.Epoch;
+	contactVects[1].Epoch = MetaSC.sc.Epoch;
+	contactVects[2].Epoch = MetaSC.sc.Epoch;
+	contactVects[3].Epoch = MetaSC.sc.Epoch;
+	vecAntiEarth.Epoch    = MetaSC.sc.Epoch;
+	vecAntiZ.Epoch        = MetaSC.sc.Epoch;
+	csToEarth.Epoch       = MetaSC.sc.Epoch;
+	csToSun.Epoch         = MetaSC.sc.Epoch;
+	
+	viewCenter.Position = MetaSC.sc.Position;
+	viewCenter.Velocity = MetaSC.sc.Velocity;
+	
+	csToEarth.SetPositionVector(vecAntiEarth);
+	csToEarth.VisualScale = 500;
+	csToSun.SetPositionVector(vecAntiEarth);
+	csToSun.VisualScale = 500;
+	
+	// Update customized status text
+	wo.Shapes[0].TextOptions.Text = MetaSC.sc.EpochText + @" UTC\n" +
+	                                "Sun Panel Angle: " + MetaSC.eps.Panels[0].SunPanelAngle.Value.Format("%.1f") + @"\n" + 
+	                                "Beta Angle: "      + MetaSC.sc.BetaAngle.Format("%.1f");
+	
+	// Update all OutputWindow objects as appropriate
+	Update DataTable;
+	Update PowerPlot;
+	Update VwEarth;
+	Switch (MetaSC.FixedAttitude);
+	    Case 0:
+	        Update vwChangingAttitude;
+	        Break;
+	    Case 1:
+	        Update vwFixed;
+	        Break;
+	End;
+	
+	// Generate Reports
+	Report MetaSC.sc.EpochText, MetaSC.eps.Panels[0].Area,MetaSC.eps.Panels[0].SunPanelAngle<8,3>, MetaSC.sc.Range(Sun)<8,3>, MetaSC.eps.Panels[0].Power<8,3> to "./output/SolarPower_MetaSC.eps.Panels[0].Power.txt"; // TODO update to fancy panel method
+	Report MetaSC.sc.ShadowTimes() to "./output/SolarPower_ShadowTimes.txt";
+	
+End;

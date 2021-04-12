@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<FreeFlyerProjectFile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" timePrecisionMode="nanosecond" schemaVersion="7.6.0.2">
+  <ProjectInformation>
+    <Author />
+    <Source />
+    <FreeFlyerVersion>7.6.0.54542</FreeFlyerVersion>
+    <RevisionNumber />
+    <Title />
+    <Subject />
+    <Category />
+    <Keywords />
+    <Comments />
+    <Notes />
+  </ProjectInformation>
+  <ProjectPreferences>
+    <General>
+      <LockProjectFromEditing>false</LockProjectFromEditing>
+    </General>
+    <OnOpen>
+      <ShowControlSequence>true</ShowControlSequence>
+      <ShowEmptyEnvironment>false</ShowEmptyEnvironment>
+      <ShowNotes>false</ShowNotes>
+      <ShowHome>false</ShowHome>
+      <ShowOutput>false</ShowOutput>
+      <CreateBackup>false</CreateBackup>
+      <BackupLocation></BackupLocation>
+    </OnOpen>
+    <OnRun>
+      <SaveMissionPlan>false</SaveMissionPlan>
+      <HideWarningMessages>false</HideWarningMessages>
+    </OnRun>
+  </ProjectPreferences>
+  <ProjectDataFiles>
+    <EarthOrientationFile useDefault="true"></EarthOrientationFile>
+    <ElectronDensityCoefficientFile useDefault="true"></ElectronDensityCoefficientFile>
+    <GeopotentialFile useDefault="true"></GeopotentialFile>
+    <HarrisPriesterDragFile useDefault="true"></HarrisPriesterDragFile>
+    <JacchiaAtmosphereModelFile useDefault="true"></JacchiaAtmosphereModelFile>
+    <LeapSecondFile useDefault="true"></LeapSecondFile>
+    <MagneticFieldFile useDefault="true"></MagneticFieldFile>
+    <PlanetaryFile useDefault="true"></PlanetaryFile>
+    <StationGeodeticsFile useDefault="true"></StationGeodeticsFile>
+    <SolidTideFile useDefault="true"></SolidTideFile>
+    <DSTFile useDefault="true"></DSTFile>
+    <StarFieldFile useDefault="true"></StarFieldFile>
+  </ProjectDataFiles>
+  <ProjectObjects>
+    <Object>
+      <SolarSystem name="FF_SolarSystem" isConstant="false" isGlobal="true">
+        <Name>FF_SolarSystem</Name>
+        <ComputePolarMotion>true</ComputePolarMotion>
+        <ApplyUT1Correction>true</ApplyUT1Correction>
+        <COUpdateInterval units="s" displayed_units="s">0</COUpdateInterval>
+        <NPUpdateInterval units="s" displayed_units="s">1800</NPUpdateInterval>
+        <IonosphereOptions>
+          <IonosphereOptions name="FF_SolarSystem_|ionoOptions|" isConstant="false" isGlobal="true">
+            <Name>FF_SolarSystem_|ionoOptions|</Name>
+            <MaximumHeight units="km" displayed_units="km">1000</MaximumHeight>
+            <MinimumHeight units="km" displayed_units="km">80</MinimumHeight>
+            <IntegrationStepSize units="km" displayed_units="km">25</IntegrationStepSize>
+            <ScaleFactor units="" displayed_units="">1</ScaleFactor>
+            <Model>0</Model>
+            <metadata dim="0" />
+          </IonosphereOptions>
+        </IonosphereOptions>
+        <NoradKeplerEqTolerance units="" displayed_units="">1e-12</NoradKeplerEqTolerance>
+        <metadata dim="0" />
+      </SolarSystem>
+    </Object>
+    <Object>
+      <ConsoleWindow name="Console" isConstant="false" isGlobal="true">
+        <Name>Console</Name>
+        <WindowTitle>Console</WindowTitle>
+        <WordWrap>false</WordWrap>
+        <CurrentTextColor>0</CurrentTextColor>
+        <BackColor>16777215</BackColor>
+        <Dimension units="" displayed_units="">10</Dimension>
+        <DockMode>1</DockMode>
+        <CurrentFontType>0</CurrentFontType>
+        <UseStdOut>false</UseStdOut>
+        <ShowOnRun>false</ShowOnRun>
+        <metadata dim="0" />
+      </ConsoleWindow>
+    </Object>
+  </ProjectObjects>
+  <ProjectMissionSequence>
+    <ProjectExternals>
+      <ProjectExternal included="true" autosave="true" contentType="FreeFlyerScript">.\SolarAnalysis.txt</ProjectExternal>
+    </ProjectExternals>
+    <ProjectCommands />
+  </ProjectMissionSequence>
+  <ProjectScript><![CDATA[]]></ProjectScript>
+  <ProjectNotes></ProjectNotes>
+</FreeFlyerProjectFile>

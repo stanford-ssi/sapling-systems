@@ -140,6 +140,9 @@ Define Procedure LoadGroundStation(GroundStation_ConfigStruct gs_struct, GroundS
 	gs.Longitude = gs_struct.Longitude;
 End;
 
+
+Variable GROUNDSTATION_ITERATOR;
+Variable PANEL_ITERATOR;
 //----------------------------------------------------------------------------------------
 // Configuration Proper
 //----------------------------------------------------------------------------------------
@@ -264,7 +267,7 @@ List<Vector> contactVects;
 Vector sunContactVect;
 Vector earthContactVect;
 
-For GROUNDSTATION_ITERATOR in GroundStations.Count-1;
+For GROUNDSTATION_ITERATOR=0 to GroundStations.Count-1;
 	contactVects.Count++;
 	contactVects[GROUNDSTATION_ITERATOR].BuildVector(9, MetaSC.sc, GroundStations[GROUNDSTATION_ITERATOR]);
 	contactVects[GROUNDSTATION_ITERATOR].Color  = ColorTools.Red;
@@ -300,7 +303,7 @@ toSun.AddOccultingBody(Earth, Moon, Mercury, Venus);
 toSun.SetObserver(MetaSC.sc);
 toSun.SetTarget(Sun);
 
-For GROUNDSTATION_ITERATOR in GroundStations.Count-1;
+For GROUNDSTATION_ITERATOR=0 to GroundStations.Count-1;
 	toGroundStations.Count++;
 	toGroundStations[GROUNDSTATION_ITERATOR].AddOccultingBody(Earth);
 	toGroundStations[GROUNDSTATION_ITERATOR].SetObserver(GroundStations[GROUNDSTATION_ITERATOR]);
@@ -317,7 +320,7 @@ viewCenter.Velocity = MetaSC.sc.Velocity;
 
 //Set up the ViewWindow for the fixed attitude system
 ViewWindow vwFixed;
-For GROUNDSTATION_ITERATOR in GroundStations.Count-1;
+For GROUNDSTATION_ITERATOR=0 to GroundStations.Count-1;
 	vwFixed.AddObject(GroundStations[GROUNDSTATION_ITERATOR]);
 	vwFixed.SetShowName(GroundStations[GROUNDSTATION_ITERATOR].Name, 1);
 End;
@@ -339,7 +342,7 @@ vwFixed.Viewpoints[0].ThreeDView.RightAscension = 310;
 
 //Set up the ViewWindow for the changing attitude system
 ViewWindow vwChangingAttitude;
-For GROUNDSTATION_ITERATOR in GroundStations.Count-1;
+For GROUNDSTATION_ITERATOR=0 to GroundStations.Count-1;
 	vwChangingAttitude.AddObject(GroundStations[GROUNDSTATION_ITERATOR]);
 	vwChangingAttitude.SetShowName(GroundStations[GROUNDSTATION_ITERATOR].Name, 1);
 End;
@@ -451,18 +454,18 @@ Else;
 End;
 
 //----------------------------------------------------------------------------------------
-// Convenience Macros for updating panels
+// Convenience macros for updating panels
 //----------------------------------------------------------------------------------------
-Define Macro UpdatePanel(PANEL);
-	MetaSC.EPS.Panels[PANEL].SunPanelAngle = MetaSC.EPS.Panels[PANEL].Orientation.VertexAngle(MetaSC.EPS.SunBCS);
-	MetaSC.EPS.Panels[PANEL].Power = MetaSC.EPS.Panels[PANEL].Efficiency*meanPower*MetaSC.EPS.Panels[PANEL].Area*
-									abs(cos(rad(MetaSC.EPS.Panels[PANEL].SunPanelAngle)))*
+Define Procedure UpdatePanels(SolarPanel PANEL);
+	PANEL.SunPanelAngle = PANEL.Orientation.VertexAngle(MetaSC.EPS.SunBCS);
+	PANEL.Power = PANEL.Efficiency*meanPower*PANELArea*
+									abs(cos(rad(PANEL.SunPanelAngle)))*
 									MetaSC.sc.Range(Sun)/meanSunDistance;
-EndMacro;
+EndProcedure;
 
-Define Macro SetPanelPowerToZero(PANEL);
-	MetaSC.EPS.Panels[PANEL].Power = 0;
-EndMacros;
+Define Macro SetPanelPowersToZero(SolarPanel PANEL);
+	PANEL.Power = 0;
+EndProcedure;
 
 //----------------------------------------------------------------------------------------
 // Main Loop (Propagation)
@@ -480,13 +483,19 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	If (MetaSC.sc.InShadow == 0);
 		// Calculate the angle between sun vector and panel normal
 		// & Calculate power from solar panel
-		For i=0 to MetaSC.EPS.Panels.Count-1;
-			UpdatePanel(i);
+		For PANEL_ITERATOR=0 to MetaSC.EPS.Panels.Count-1;
+			Call UpdatePanel(MetaSC.EPS.Panels[PANEL_ITERATOR]);
 		End;
 	ElseIf (MetaSC.sc.InShadow == 1);
-		For i=0 to MetaSC.EPS.Panels.Count-1;
-			SetPanelPowerToZero(i);
+		For PANEL_ITERATOR=0 to MetaSC.EPS.Panels.Count-1;
+			Call SetPanelPowerToZero(MetaSC.EPS.Panels[PANEL_ITERATOR]);
 		End;
+	End;
+
+	// Calculate total power
+	MetaSC.EPS.TotalPower = 0;
+	For PANEL_ITERATOR=0 to MetaSC.EPS.Panels.Count-1;
+		MetaSC.EPS.TotalPower += MetaSC.EPS.Panels[PANEL_ITERATOR].Power;
 	End;
 	
 	Shadow = MetaSC.sc.InShadow;
@@ -508,19 +517,23 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 
 	    // Block Contact Analysis
 	    // Determine contact with the ground sites first
-	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 1 and inContactDurand == 0);
-	        inContactDurand = 1;
-	    	contactVects[0].Active = 1;
-	
-	    	If(isCharging == 0);
-	    		Console.CurrentTextColor = ColorTools.Khaki;
-	    		Report "Charging has stopped... " to Console;
+		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
+			If (toGroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 1 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 0);
+				inContactGroundStation[GROUNDSTATION_ITERATOR] == 0 = 1;
+				contactVects[0].Active = 1;
+		
+				If(isCharging == 0);
+					Console.CurrentTextColor = ColorTools.Khaki;
+					Report "Charging has stopped... " to Console;
+				End;
+		
+				Console.CurrentTextColor = ColorTools.Red;
+				Report "Contact with " to Console;
+				Report GroundStations[GROUNDSTATION_ITERATOR].Name to Console;
+				Report " has begun..." to Console;
 			End;
-	
-	    	Console.CurrentTextColor = ColorTools.Red;
-	        Report "Contact with Durand has begun..." to Console;
-	    End;
-
+		End;
+	    
 	    If (toSun.Visibility(MetaSC.sc.Epoch) == 1 and inSunlight == 0);
 	        inSunlight = 1;
 	        sunContactVect.Active = 1;
@@ -531,13 +544,17 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	        Console.CurrentTextColor = ColorTools.Khaki;
 	    End;
 
-	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 0 and inContactDurand == 1);
-	        inContactDurand = 0;
-	    	contactVects[0].Active = 0;
-	
-	        Console.CurrentTextColor = ColorTools.Red;
-	        Report "Contact with Durand has ended..." to Console;
-	    End;
+		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
+			If (GroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 0 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 1);
+				inContactGroundStation[GROUNDSTATION_ITERATOR] = 0;
+				contactVects[0].Active = 0;
+		
+				Console.CurrentTextColor = ColorTools.Red;
+				Report "Contact with " to Console;
+				Report GroundStations[GROUNDSTATION_ITERATOR].Name to Console;
+				Report " has ended..." to Console;
+			End;
+		End;
 
 	    If (toSun.Visibility(MetaSC.sc.Epoch) == 0 and inSunlight == 1);
 	        inSunlight = 0;
@@ -589,16 +606,21 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	    isCharging = 0;
 	    isSunSlew  = 0;
 	    
-	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 1 and inContactDurand == 0);
-	        inContactDurand = 1;
-	        contactVects[0].Active = 1;
-	    	MetaSC.Vectors.ToDurand.Color = ColorTools.Red;
-	    	MetaSC.Vectors.ToDurand.BuildVector(9,MetaSC.sc,Durand);
-	    	MetaSC.Vectors.ToDurand.Active = 1;
-	
-	        Console.CurrentTextColor = ColorTools.LightBlue;
-	        Report "Contact with Durand has begun..." to Console;
-	    End; 
+		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
+			If (GroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 1 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 0);
+				inContactGroundStation[GROUNDSTATION_ITERATOR] = 1;
+				contactVects[0].Active = 1;
+				MetaSC.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Color = ColorTools.Red;
+				MetaSC.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].BuildVector(9,MetaSC.sc,GroundStations[GROUNDSTATION_ITERATOR]);
+				MetaSC.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Active = 1;
+		
+				Console.CurrentTextColor = ColorTools.LightBlue;
+				Console.CurrentTextColor = ColorTools.Red;
+				Report "Contact with " to Console;
+				Report GroundStations[GROUNDSTATION_ITERATOR].Name to Console;
+				Report " has begun..." to Console;
+			End; 
+		End;
 
 	    If (toSun.Visibility(MetaSC.sc.Epoch) == 1 and inSunlight == 0);
 	        inSunlight = 1;
@@ -608,15 +630,19 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	
 	        Console.CurrentTextColor = ColorTools.Khaki;
 	    End;
-
-	    If (toDurand.Visibility(MetaSC.sc.Epoch) == 0 and inContactDurand == 1);
-	        inContactDurand = 0;
-	        contactVects[0].Active = 0;
-	    	MetaSC.Vectors.ToDurand.Active = 0;
-	
-	        Console.CurrentTextColor = ColorTools.LightBlue;
-	        Report "Contact with Durand has ended..." to Console;
-	    End;
+		
+		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
+			If (GroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 0 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 1);
+				inContactGroundStation[GROUNDSTATION_ITERATOR] == 1 = 0;
+				contactVects[0].Active = 0;
+				MetaSC.Vectors.toGroundStations[GROUNDSTATION_ITERATOR] == 1.Active = 0;
+		
+				Console.CurrentTextColor = ColorTools.LightBlue;
+				Report "Contact with " to Console;
+				Report GroundStations[GROUNDSTATION_ITERATOR].Name to Console;
+				Report " has begun..." to Console;
+			End;
+		End;
 
 	    If (toSun.Visibility(MetaSC.sc.Epoch) == 0 and inSunlight == 1);
 	        inSunlight = 0;
@@ -624,12 +650,6 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	    	MetaSC.Vectors.ToSun.Active = 0;
 	        Console.CurrentTextColor = ColorTools.Khaki;
 	    End;
-	End;
-	
-	// Calculate total power
-	MetaSC.EPS.TotalPower = 0;
-	For PANEL_ITERATOR=0 to MetaSC.EPS.Panels.Count-1;
-		MetaSC.EPS.TotalPower += MetaSC.EPS.Panels[PANEL_ITERATOR].Power;
 	End;
 
 	// Propagate and Generate Outputs
@@ -659,7 +679,8 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	                                "Sun Panel Angle: " + MetaSC.EPS.Panels[0].SunPanelAngle.Value.Format("%.1f") + @"\n" + 
 	                                "Beta Angle: "      + MetaSC.sc.BetaAngle.Format("%.1f");
 	
-	// Update all OutputWindow objects as appropriate
+	// Update OutputWindows
+
 	Update DataTable;
 	Update PowerPlot;
 	Update VwEarth;

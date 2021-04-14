@@ -1,0 +1,71 @@
+{
+    "Sapling": {
+        "ADCS": {
+            "FixedAttitude": 1        
+        },
+        "Orbit": {
+            "A": 7083.1364,
+            "E": 0.0,
+            "I": 98.2083789592433,
+            "RAAN": 280.26791820885,
+            "W": 171.130489033293,
+            "TA": 171.130489033293
+        },
+        "MassProperties": {
+            "VehicleDryMass": 1.33,
+            "VehicleDryMOI": [
+                [0.5, 0, 0],
+                [0, 0.5, 0],
+                [0, 0, 0.5]
+            ]
+        },
+        "EPS": {
+            "Panels": [
+                {   
+                    "Name": "Minus_X",
+                    "Area": 0.01,
+                    "Efficiency": 0.3,
+                    "Orientation": [-1, 0, 0]
+                },
+                {   
+                    "Name": "Minus_Y",
+                    "Area": 0.01,
+                    "Efficiency": 0.3,
+                    "Orientation": [0, -1, 0]
+                },
+                {   
+                    "Name": "Minus_Z",
+                    "Area": 0.005,
+                    "Efficiency": 0.15,
+                    "Orientation": [0, 0, -1]
+                },
+                {   
+                    "Name": "Plus_X",
+                    "Area": 0.01,
+                    "Efficiency": 0.3,
+                    "Orientation": [1, 0, 0]
+                },
+                {   
+                    "Name": "Plus_Y",
+                    "Area": 0.01,
+                    "Efficiency": 0.3,
+                    "Orientation": [0, 1, 0]
+                },
+                {   
+                    "Name": "Plus_Z",
+                    "Area": 0.005,
+                    "Efficiency": 0.15,
+                    "Orientation": [0, 0, 1]
+                }
+            ]
+        }
+    },
+    "GroundStations": [
+        {
+            "Name": "Durand",
+            "Height": 70,
+            "Latitude": 37.4269,
+            "Longitude": -122.1733
+        }
+    ]
+}

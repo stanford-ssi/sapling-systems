@@ -86,6 +86,7 @@
   <ProjectMissionSequence>
     <ProjectExternals>
       <ProjectExternal included="true" autosave="true" contentType="FreeFlyerScript">.\SolarAnalysis.txt</ProjectExternal>
+      <ProjectExternal included="false" autosave="true" contentType="Generic">.\configuration\config.json</ProjectExternal>
     </ProjectExternals>
     <ProjectCommands />
   </ProjectMissionSequence>

@@ -1,4 +1,5 @@
 String config_file = "./configuration/config.json";
+String output_file = "./output/output.json";
 //----------------------------------------------------------------------------------------
 // Includes
 //----------------------------------------------------------------------------------------
@@ -26,6 +27,13 @@ Variable GROUNDSTATION_ITERATOR=0;
 //----------------------------------------------------------------------------------------
 // Meta Struct Definition
 //----------------------------------------------------------------------------------------
+
+// Holds configuration for the simulation TODO organize structs in seperate files
+Struct Simulation_ConfigStruct;
+	Variable Length;
+	Variable TimeStep;
+End;
+
 // Holds information about a specific solar panel
 Struct SolarPanel;
 	String Display_Name;	// most likely describing location
@@ -40,7 +48,7 @@ End;
 Struct EPS_Struct;
 	List<SolarPanel> Panels;
 	Variable TotalPower;
-	Variable meanPower; // TODO
+	Variable MeanPower;
 	Array SunBCS;
 End;
 
@@ -52,7 +60,7 @@ End;
 
 // Holds information about the ADCS
 Struct ADCS_Struct;
-	Variable State; // 0 tumbling, 1 fixed, 2 correct mode of operation
+	String State; // "tumbling", "fixed", "zenith-pointing", or "changing"
 	SpacecraftVectors Vectors;
 End;
 
@@ -98,9 +106,22 @@ End;
 
 // Used to load data into simulation objects
 Struct Configuration;
+	Simulation_ConfigStruct Simulation;
 	MetaSpacecraft_ConfigStruct Sapling;
 	List<GroundStation_ConfigStruct> GroundStations;
 End;
+
+Struct Output_Struct;
+	List<SolarPanel> Panels;
+	Variable TotalPower;
+	Array SunBCS;
+	
+	@JsonNumericType("bool")
+	Variable Shadow;
+	String Epoch;
+End;
+
+List<Output_Struct> output;
 
 Configuration config;
 
@@ -115,7 +136,7 @@ Define Procedure LoadConfiguration(String filepath, Structure config_struct);
 	JSON.DeserializeFromFile(filepath, config_struct);
 	Report JSON.Serialize(config_struct, 1);
 EndProcedure;
-
+	
 Define Procedure LoadMetaSpacecraft(MetaSpacecraft_ConfigStruct msc_config, MetaSpacecraft msc);
 	msc.sc.A = msc_config.Orbit.A;
 	msc.sc.E = msc_config.Orbit.E;
@@ -149,6 +170,21 @@ Define Procedure LoadGroundStation(GroundStation_ConfigStruct gs_struct, GroundS
 	gs.Height = gs_struct.Height;
 	gs.Latitude = gs_struct.Latitude;
 	gs.Longitude = gs_struct.Longitude;
+EndProcedure;
+
+Define Macro SaveOutput(output_struct, filepath);
+	JsonInterface JSON;
+	JSON.SerializeToFile(output_struct, filepath, 1);
+EndMacro;
+
+Define Procedure SaveEPS(EPS_Struct eps_struct, Output_Struct eps_copy);
+	eps_copy.TotalPower = eps_struct.TotalPower;
+	eps_copy.SunBCS = eps_struct.SunBCS;
+	eps_copy.Panels.Count = eps_struct.Panels.Count;
+	Variable PANEL_ITERATOR = 0;
+	For PANEL_ITERATOR=0 to eps_copy.Panels.Count-1;
+		eps_copy.Panels[PANEL_ITERATOR] = eps_struct.Panels[PANEL_ITERATOR];
+	End;
 EndProcedure;
 
 //----------------------------------------------------------------------------------------
@@ -259,7 +295,7 @@ EndProcedure;
 // ThreeDModel Configuration
 // Create ThreeDModel Object
 ThreeDModel tdm;
-tdm.LoadModel("../visualization/3u_structure.3ds");
+tdm.LoadModel("../../visualization/3u_structure.3ds");
 
 // Apply 3D model to MetaSC.sc
 MetaSC.sc.SetThreeDModel(tdm);
@@ -296,7 +332,7 @@ vecAntiEarth.BuildVector(3, earthContactVect);
 
 CoordinateSystem csToSun;
 CoordinateSystem csToEarth;
-csToSun.BuildCoordinateSystem(3, vecAntiZ, 2, sunContactVect); // TODO double check this
+csToSun.BuildCoordinateSystem(3, vecAntiZ, 2, contactVects[0]); // arbitrary Y axis (cross product of sun vector and vector to 1st ground station)
 csToEarth.BuildCoordinateSystem(3, vecAntiEarth, 2, earthContactVect);
 
 //----------------------------------------------------------------------------------------
@@ -416,18 +452,31 @@ Array inContactGroundStation[GroundStations.Count]; // zero-initialized
 // D = 149600000 (1AU), gives us the value of 1366.7 W/m2.
 
 // Variables for Panel Power calculations
-MetaSC.EPS.meanPower = 1366.7;			  
+MetaSC.EPS.MeanPower = 1366.7;			  
 MetaSC.meanSunDistance = 149530000; //1 AU
 
 // Variables for shadow time calculations
 Variable Shadow;
 Variable ShadowPrev;
+RandomNumberGenerator RNG;
 
 //----------------------------------------------------------------------------------------
 // Attitude Setup
 //----------------------------------------------------------------------------------------
 Console.CurrentTextColor = ColorTools.Chocolate;
-If (MetaSC.ADCS.State == 1);
+If (MetaSC.ADCS.State == "Tumbling");
+	// Set attitude rate of MetaSC.sc
+	MetaSC.sc.EulerRates[0] = RNG.GaussianDistribution(1.2, 1);
+	MetaSC.sc.EulerRates[1] = RNG.GaussianDistribution(1.2, 1);
+	MetaSC.sc.EulerRates[2] = RNG.GaussianDistribution(1.2, 1);
+	Report @"You chose a tumbling satellite.\n" to Console;
+	Report  "Euler Angle 1: " + MetaSC.sc.EulerAngles[0].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 2: " + MetaSC.sc.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + MetaSC.sc.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + MetaSC.sc.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + MetaSC.sc.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + MetaSC.sc.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+ElseIf (MetaSC.ADCS.State == "Fixed");
 	// The spacecraft is fixed therefore all angles and rates go to 0
 	// Set Euler Angles 
 	MetaSC.sc.EulerAngles[0] = 0;
@@ -446,23 +495,34 @@ If (MetaSC.ADCS.State == 1);
 	Report  "Euler Rate 1: "  + MetaSC.sc.EulerRates[0].ToString()  +  " deg/s"   to Console;
 	Report  "Euler Rate 2: "  + MetaSC.sc.EulerRates[1].ToString()  +  " deg/s"   to Console;
 	Report  "Euler Rate 3: "  + MetaSC.sc.EulerRates[2].ToString()  + @" deg/s\n" to Console;
-ElseIf (MetaSC.ADCS.State == 0);
-	Report @"You chose a tumbling satellite.\n" to Console;
-	
+ElseIf (MetaSC.ADCS.State == "Zenith-pointing");
+	// The spacecraft is Zenith pointing, start with all angles and rates at 0
+	// Set Euler Angles 
+	MetaSC.sc.EulerAngles[0] = 0;
+	MetaSC.sc.EulerAngles[1] = 0;
+	MetaSC.sc.EulerAngles[2] = 0;
+
 	// Set attitude rate of MetaSC.sc
 	MetaSC.sc.EulerRates[0] = 0;
 	MetaSC.sc.EulerRates[1] = 0;
 	MetaSC.sc.EulerRates[2] = 0;
-ElseIf (MetaSC.ADCS.State == 2);
+
+	Report @"You chose a Zenith-pointing attitude system.\n" to Console;
+	Report  "Euler Angle 1: " + MetaSC.sc.EulerAngles[0].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 2: " + MetaSC.sc.EulerAngles[1].ToString() +  " deg"     to Console;
+	Report  "Euler Angle 3: " + MetaSC.sc.EulerAngles[2].ToString() + @" deg\n"   to Console;
+	Report  "Euler Rate 1: "  + MetaSC.sc.EulerRates[0].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 2: "  + MetaSC.sc.EulerRates[1].ToString()  +  " deg/s"   to Console;
+	Report  "Euler Rate 3: "  + MetaSC.sc.EulerRates[2].ToString()  + @" deg/s\n" to Console;
+ElseIf (MetaSC.ADCS.State == "Changing");
     Report @"You chose a changing attitude system.\n" to Console;
 End;
 
 //----------------------------------------------------------------------------------------
 // Convenience macros for updating panels
 //----------------------------------------------------------------------------------------
-Define Procedure UpdatePanel(SolarPanel PANEL, MetaSpacecraft MetaSC);
-	PANEL.SunPanelAngle = PANEL.Orientation.VertexAngle(MetaSC.EPS.SunBCS);
-	PANEL.Power = PANEL.Efficiency*MetaSC.EPS.meanPower*PANEL.Area*
+Define Procedure UpdatePanelPower(SolarPanel PANEL, MetaSpacecraft MetaSC);
+	PANEL.Power = PANEL.Efficiency*MetaSC.EPS.MeanPower*PANEL.Area*
 									abs(cos(rad(PANEL.SunPanelAngle)))*
 									MetaSC.sc.Range(Sun)/MetaSC.meanSunDistance;
 EndProcedure;
@@ -471,25 +531,31 @@ Define Procedure SetPanelPowerToZero(SolarPanel PANEL);
 	PANEL.Power = 0;
 EndProcedure;
 
-//----------------------------------------------------------------------------------------
-// Main Loop (Propagation)
-//----------------------------------------------------------------------------------------
-While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
+Define Procedure UpdateEPS(MetaSpacecraft MetaSC, CoordinateSystem csToSun);
+	// TODO update average power
 	
-	// Panel Orientation/Attitude Convert
+	// "local" variables
+	Variable PANEL_ITERATOR;
 	
-	// MetaSC.sc.SunVector gives Sun position in MJ2000 coordinates
-	// Transform the sun vector to BCS using AttitudeConvert
-	MetaSC.EPS.SunBCS = AttitudeConvert(0, 3, MetaSC.sc, MetaSC.sc.SunVector);
-	
-	// Shadow Calculations
-	
+	// In the sun, update panel powers
 	If (MetaSC.sc.InShadow == 0);
-		// Calculate the angle between sun vector and panel normal
-		// & Calculate power from solar panel
+		// Calculate the angle between sun vector and panel normal.
 		For PANEL_ITERATOR=0 to MetaSC.EPS.Panels.Count-1;
-			Call UpdatePanel(MetaSC.EPS.Panels[PANEL_ITERATOR], MetaSC);
+			
+			MetaSC.EPS.Panels[PANEL_ITERATOR].SunPanelAngle = MetaSC.EPS.Panels[PANEL_ITERATOR].Orientation.VertexAngle(MetaSC.EPS.SunBCS);
+			
+			// If the vertex angle is less than 90 deg, update the panel power
+			If (MetaSC.EPS.Panels[PANEL_ITERATOR].SunPanelAngle < 90);
+				Call UpdatePanelPower(MetaSC.EPS.Panels[PANEL_ITERATOR], MetaSC);
+
+			// Panel is on the bottom, set power to zero
+			Else;
+				Call SetPanelPowerToZero(MetaSC.EPS.Panels[PANEL_ITERATOR]);
+			End;
+
 		End;
+
+	// In the shade, update all panel power to 0
 	ElseIf (MetaSC.sc.InShadow == 1);
 		For PANEL_ITERATOR=0 to MetaSC.EPS.Panels.Count-1;
 			Call SetPanelPowerToZero(MetaSC.EPS.Panels[PANEL_ITERATOR]);
@@ -501,6 +567,22 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	For PANEL_ITERATOR=0 to MetaSC.EPS.Panels.Count-1;
 		MetaSC.EPS.TotalPower += MetaSC.EPS.Panels[PANEL_ITERATOR].Power;
 	End;
+
+EndProcedure;
+
+//----------------------------------------------------------------------------------------
+// Main Loop (Propagation)
+//----------------------------------------------------------------------------------------
+While (MetaSC.sc.ElapsedTime < TimeSpan.FromSeconds(config.Simulation.Length));
+	
+	// Panel Orientation/Attitude Convert
+	
+	// MetaSC.sc.SunVector gives Sun position in MJ2000 coordinates
+	// Transform the sun vector to BCS using AttitudeConvert
+	MetaSC.EPS.SunBCS = AttitudeConvert(0, 3, MetaSC.sc, MetaSC.sc.SunVector);
+	
+	// Update EPS system
+	Call UpdateEPS(MetaSC, csToSun);
 	
 	Shadow = MetaSC.sc.InShadow;
 	
@@ -516,13 +598,77 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	
 	Console.CurrentTextColor = ColorTools.White;
 	
+	// TODO Tumbling Attitude Reports
+	
+	// Fixed Attitude Reports
+	If (MetaSC.ADCS.State == "Zenith-pointing");
+		//Determine contact with the ground sites first
+	    //Slew to face the earth
+	    MetaSC.sc.AttitudeRefFrame = "MJ2000";
+	    Call SetSlewRate(MetaSC.sc, earthManeuver, csToEarth, 0);
+	    cacheEpoch = MetaSC.sc.Epoch;
+	    isCharging = 0;
+	    isSunSlew  = 0;
+	    
+		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
+			If (toGroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 1 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 0);
+
+				// begin contact
+				inContactGroundStation[GROUNDSTATION_ITERATOR] = 1;
+				contactVects[0].Active = 1;
+				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Color = ColorTools.Red;
+				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].BuildVector(9,MetaSC.sc,GroundStations[GROUNDSTATION_ITERATOR]);
+				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Active = 1;
+		
+				Console.CurrentTextColor = ColorTools.LightBlue;
+				Console.CurrentTextColor = ColorTools.Red;
+				Report "Contact with " to Console;
+				Report GroundStations[GROUNDSTATION_ITERATOR].DisplayName to Console;
+				Report " has begun..." to Console;
+			End; 
+		End;
+
+	    If (toSun.Visibility(MetaSC.sc.Epoch) == 1 and inSunlight == 0);
+	        inSunlight = 1;
+	        sunContactVect.Active = 1;
+	    	MetaSC.ADCS.Vectors.ToSun.BuildVector(9,MetaSC.sc,Sun);
+	    	MetaSC.ADCS.Vectors.ToSun.Active = 1;
+	
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+		
+		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
+			If (toGroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 0 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 1);
+
+				// end contact
+				inContactGroundStation[GROUNDSTATION_ITERATOR] = 0;
+				contactVects[0].Active = 0;
+				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Active = 0;
+		
+				Console.CurrentTextColor = ColorTools.LightBlue;
+				Report "Contact with " to Console;
+				Report GroundStations[GROUNDSTATION_ITERATOR].DisplayName to Console;
+				Report " has begun..." to Console;
+			End;
+		End;
+
+	    If (toSun.Visibility(MetaSC.sc.Epoch) == 0 and inSunlight == 1);
+	        inSunlight = 0;
+	        sunContactVect.Active = 0;
+	    	MetaSC.ADCS.Vectors.ToSun.Active = 0;
+	        Console.CurrentTextColor = ColorTools.Khaki;
+	    End;
+	End;
+	
 	// Changing Attitude Setup
-	If (MetaSC.ADCS.State == 0);
+	If (MetaSC.ADCS.State == "Changing");
 
 	    // Block Contact Analysis
 	    // Determine contact with the ground sites first
 		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
 			If (toGroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 1 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 0);
+
+				// begin contact
 				inContactGroundStation[GROUNDSTATION_ITERATOR] = 1;
 				contactVects[0].Active = 1;
 		
@@ -550,6 +696,8 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 
 		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
 			If (toGroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 0 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 1);
+
+				// end contact
 				inContactGroundStation[GROUNDSTATION_ITERATOR] = 0;
 				contactVects[0].Active = 0;
 		
@@ -573,7 +721,7 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	    // No contact on any groundstations 
 	    If (inSunlight == 1);
 	        Console.CurrentTextColor = ColorTools.Orange;
-	    	MetaSC.sc.Propagator.StepSize = TimeSpan.FromSeconds(10);
+	    	MetaSC.sc.Propagator.StepSize = TimeSpan.FromSeconds(config.Simulation.TimeStep);
 	
 	        // Slew to face the sun
 	        MetaSC.sc.AttitudeRefFrame = "MJ2000";
@@ -597,63 +745,6 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 			flag = 0;
 	        isSunSlew  = -1;
 		End;
-	End;
-	
-	
-	// Fixed Attitude Reports
-	If (MetaSC.ADCS.State == 1);
-		//Determine contact with the ground sites first
-	    //Slew to face the earth
-	    MetaSC.sc.AttitudeRefFrame = "MJ2000";
-	    Call SetSlewRate(MetaSC.sc, earthManeuver, csToEarth, 0);
-	    cacheEpoch = MetaSC.sc.Epoch;
-	    isCharging = 0;
-	    isSunSlew  = 0;
-	    
-		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
-			If (toGroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 1 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 0);
-				inContactGroundStation[GROUNDSTATION_ITERATOR] = 1;
-				contactVects[0].Active = 1;
-				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Color = ColorTools.Red;
-				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].BuildVector(9,MetaSC.sc,GroundStations[GROUNDSTATION_ITERATOR]);
-				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Active = 1;
-		
-				Console.CurrentTextColor = ColorTools.LightBlue;
-				Console.CurrentTextColor = ColorTools.Red;
-				Report "Contact with " to Console;
-				Report GroundStations[GROUNDSTATION_ITERATOR].DisplayName to Console;
-				Report " has begun..." to Console;
-			End; 
-		End;
-
-	    If (toSun.Visibility(MetaSC.sc.Epoch) == 1 and inSunlight == 0);
-	        inSunlight = 1;
-	        sunContactVect.Active = 1;
-	    	MetaSC.ADCS.Vectors.ToSun.BuildVector(9,MetaSC.sc,Sun);
-	    	MetaSC.ADCS.Vectors.ToSun.Active = 1;
-	
-	        Console.CurrentTextColor = ColorTools.Khaki;
-	    End;
-		
-		For GROUNDSTATION_ITERATOR=0 to config.GroundStations.Count-1;
-			If (toGroundStations[GROUNDSTATION_ITERATOR].Visibility(MetaSC.sc.Epoch) == 0 and inContactGroundStation[GROUNDSTATION_ITERATOR] == 1);
-				inContactGroundStation[GROUNDSTATION_ITERATOR] = 0;
-				contactVects[0].Active = 0;
-				MetaSC.ADCS.Vectors.ToGroundStations[GROUNDSTATION_ITERATOR].Active = 0;
-		
-				Console.CurrentTextColor = ColorTools.LightBlue;
-				Report "Contact with " to Console;
-				Report GroundStations[GROUNDSTATION_ITERATOR].DisplayName to Console;
-				Report " has begun..." to Console;
-			End;
-		End;
-
-	    If (toSun.Visibility(MetaSC.sc.Epoch) == 0 and inSunlight == 1);
-	        inSunlight = 0;
-	        sunContactVect.Active = 0;
-	    	MetaSC.ADCS.Vectors.ToSun.Active = 0;
-	        Console.CurrentTextColor = ColorTools.Khaki;
-	    End;
 	End;
 
 	// Propagate and Generate Outputs
@@ -690,16 +781,23 @@ While (MetaSC.sc.ElapsedTime < TIMESPAN(8 hours));
 	Update PowerPlot;
 	Update VwEarth;
 	Switch (MetaSC.ADCS.State);
-	    Case 0:
-	        Update vwChangingAttitude;
+	    Case "Tumbling":
 	        Break;
-	    Case 1:
+	    Case "Fixed":
 	        Update vwFixed;
+	        Break;
+	    Case "Zenith-pointing":
+	        Update vwFixed;
+	        Break;
+	    Case "Changing":
+	    	Update vwChangingAttitude;
 	        Break;
 	End;
 	
-	// Record output to file
-	Report MetaSC.sc.EpochText, MetaSC.EPS.Panels[0].Area,MetaSC.EPS.Panels[0].SunPanelAngle<8,3>, MetaSC.sc.Range(Sun)<8,3>, MetaSC.EPS.Panels[0].Power<8,3> to "./output/SolarPower_MetaSC.EPS.Panels[0].Power.txt";
-	Report MetaSC.sc.ShadowTimes() to "./output/SolarPower_ShadowTimes.txt";
-	
+	output.Count++;
+	Call SaveEPS(MetaSC.EPS, output[output.Count-1]);
+	output[output.Count-1].Epoch = MetaSC.sc.EpochText;
+	output[output.Count-1].Shadow = Shadow;
 End;
+
+Call SaveOutput(output, output_file);

@@ -1,0 +1,25 @@
+{
+    "phases": {
+        "deployment" : {
+            "modes": {
+                "detumble" : 0.3,
+                "deploy antennas": 0.3,
+                "idle": 0.4
+            }
+        },
+        "first contact" : {
+
+        },
+        "mission operations" : {
+
+        },
+        "decomissioning" : {
+            
+        }
+    },
+    "modes" : {
+        "detumble" : {
+            "power consumption": 0.9
+        }
+    }
+}

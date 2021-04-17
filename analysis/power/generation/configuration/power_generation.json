@@ -22,37 +22,37 @@
         "EPS": {
             "Panels": [
                 {   
-                    "Name": "Minus_X",
+                    "Display_Name": "Minus_X",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [-1, 0, 0]
                 },
                 {   
-                    "Name": "Minus_Y",
+                    "Display_Name": "Minus_Y",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [0, -1, 0]
                 },
                 {   
-                    "Name": "Minus_Z",
+                    "Display_Name": "Minus_Z",
                     "Area": 0.005,
                     "Efficiency": 0.15,
                     "Orientation": [0, 0, -1]
                 },
                 {   
-                    "Name": "Plus_X",
+                    "Display_Name": "Plus_X",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [1, 0, 0]
                 },
                 {   
-                    "Name": "Plus_Y",
+                    "Display_Name": "Plus_Y",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [0, 1, 0]
                 },
                 {   
-                    "Name": "Plus_Z",
+                    "Display_Name": "Plus_Z",
                     "Area": 0.005,
                     "Efficiency": 0.15,
                     "Orientation": [0, 0, 1]

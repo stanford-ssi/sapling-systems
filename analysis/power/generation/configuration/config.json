@@ -14,45 +14,45 @@
         "MassProperties": {
             "VehicleDryMass": 1.33,
             "VehicleDryMOI": [
-                [0.5, 0, 0],
-                [0, 0.5, 0],
-                [0, 0, 0.5]
+                [0.5, 0.0, 0.0],
+                [0.0, 0.5, 0],
+                [0.0, 0.0, 0.5]
             ]
         },
         "EPS": {
             "Panels": [
                 {   
-                    "Display_Name": "Minus_X",
+                    "Name": "Minus_X",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [-1, 0, 0]
                 },
                 {   
-                    "Display_Name": "Minus_Y",
+                    "Name": "Minus_Y",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [0, -1, 0]
                 },
                 {   
-                    "Display_Name": "Minus_Z",
+                    "Name": "Minus_Z",
                     "Area": 0.005,
                     "Efficiency": 0.15,
                     "Orientation": [0, 0, -1]
                 },
                 {   
-                    "Display_Name": "Plus_X",
+                    "Name": "Plus_X",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [1, 0, 0]
                 },
                 {   
-                    "Display_Name": "Plus_Y",
+                    "Name": "Plus_Y",
                     "Area": 0.01,
                     "Efficiency": 0.3,
                     "Orientation": [0, 1, 0]
                 },
                 {   
-                    "Display_Name": "Plus_Z",
+                    "Name": "Plus_Z",
                     "Area": 0.005,
                     "Efficiency": 0.15,
                     "Orientation": [0, 0, 1]

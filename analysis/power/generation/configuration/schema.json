@@ -1,0 +1,864 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "title": "SolarPowerGeneration Configuration",
+    "description": "This schema describes a configuration file for the SolarPowerGeneration FreeFlyer MissionPlan ",
+    "default": {},
+    "examples": [
+        {
+            "Simulation": {
+                "Length": 86400.0,
+                "TimeStep": 10.0
+            },
+            "Sapling": {
+                "ADCS": {
+                    "State": "Fixed"
+                },
+                "Orbit": {
+                    "A": 7083.1364,
+                    "E": 0.0,
+                    "I": 98.2083789592433,
+                    "RAAN": 280.26791820885,
+                    "W": 171.130489033293,
+                    "TA": 171.130489033293
+                },
+                "MassProperties": {
+                    "VehicleDryMass": 1.33,
+                    "VehicleDryMOI": [
+                        [
+                            0.5,
+                            0.0,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            0.5,
+                            0
+                        ],
+                        [
+                            0.0,
+                            0.0,
+                            0.5
+                        ]
+                    ]
+                },
+                "EPS": {
+                    "Panels": [
+                        {
+                            "Name": "Minus_X",
+                            "Area": 0.006,
+                            "Efficiency": 0.3,
+                            "Orientation": [
+                                -1,
+                                0,
+                                0
+                            ]
+                        },
+                        {
+                            "Name": "Minus_Y",
+                            "Area": 0.006,
+                            "Efficiency": 0.3,
+                            "Orientation": [
+                                0,
+                                -1,
+                                0
+                            ]
+                        },
+                        {
+                            "Name": "Minus_Z",
+                            "Area": 0.005,
+                            "Efficiency": 0.15,
+                            "Orientation": [
+                                0,
+                                0,
+                                -1
+                            ]
+                        },
+                        {
+                            "Name": "Plus_X",
+                            "Area": 0.006,
+                            "Efficiency": 0.3,
+                            "Orientation": [
+                                1,
+                                0,
+                                0
+                            ]
+                        },
+                        {
+                            "Name": "Plus_Y",
+                            "Area": 0.006,
+                            "Efficiency": 0.3,
+                            "Orientation": [
+                                0,
+                                1,
+                                0
+                            ]
+                        },
+                        {
+                            "Name": "Plus_Z",
+                            "Area": 0.005,
+                            "Efficiency": 0.15,
+                            "Orientation": [
+                                0,
+                                0,
+                                1
+                            ]
+                        }
+                    ]
+                }
+            },
+            "GroundStations": [
+                {
+                    "Name": "Durand",
+                    "Height": 70,
+                    "Latitude": 37.4269,
+                    "Longitude": -122.1733
+                }
+            ]
+        }
+    ],
+    "required": [
+        "Simulation",
+        "Sapling",
+        "GroundStations"
+    ],
+    "properties": {
+        "Simulation": {
+            "$id": "#/properties/Simulation",
+            "type": "object",
+            "title": "The Simulation schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": {},
+            "examples": [
+                {
+                    "Length": 86400.0,
+                    "TimeStep": 10.0
+                }
+            ],
+            "required": [
+                "Length",
+                "TimeStep"
+            ],
+            "properties": {
+                "Length": {
+                    "$id": "#/properties/Simulation/properties/Length",
+                    "type": "number",
+                    "title": "The Length schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": 0.0,
+                    "examples": [
+                        86400.0
+                    ]
+                },
+                "TimeStep": {
+                    "$id": "#/properties/Simulation/properties/TimeStep",
+                    "type": "number",
+                    "title": "The TimeStep schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": 0.0,
+                    "examples": [
+                        10.0
+                    ]
+                }
+            },
+            "additionalProperties": true
+        },
+        "Sapling": {
+            "$id": "#/properties/Sapling",
+            "type": "object",
+            "title": "The Sapling schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": {},
+            "examples": [
+                {
+                    "ADCS": {
+                        "State": "Fixed"
+                    },
+                    "Orbit": {
+                        "A": 7083.1364,
+                        "E": 0.0,
+                        "I": 98.2083789592433,
+                        "RAAN": 280.26791820885,
+                        "W": 171.130489033293,
+                        "TA": 171.130489033293
+                    },
+                    "MassProperties": {
+                        "VehicleDryMass": 1.33,
+                        "VehicleDryMOI": [
+                            [
+                                0.5,
+                                0.0,
+                                0.0
+                            ],
+                            [
+                                0.0,
+                                0.5,
+                                0
+                            ],
+                            [
+                                0.0,
+                                0.0,
+                                0.5
+                            ]
+                        ]
+                    },
+                    "EPS": {
+                        "Panels": [
+                            {
+                                "Name": "Minus_X",
+                                "Area": 0.006,
+                                "Efficiency": 0.3,
+                                "Orientation": [
+                                    -1,
+                                    0,
+                                    0
+                                ]
+                            },
+                            {
+                                "Name": "Minus_Y",
+                                "Area": 0.006,
+                                "Efficiency": 0.3,
+                                "Orientation": [
+                                    0,
+                                    -1,
+                                    0
+                                ]
+                            },
+                            {
+                                "Name": "Minus_Z",
+                                "Area": 0.005,
+                                "Efficiency": 0.15,
+                                "Orientation": [
+                                    0,
+                                    0,
+                                    -1
+                                ]
+                            },
+                            {
+                                "Name": "Plus_X",
+                                "Area": 0.006,
+                                "Efficiency": 0.3,
+                                "Orientation": [
+                                    1,
+                                    0,
+                                    0
+                                ]
+                            },
+                            {
+                                "Name": "Plus_Y",
+                                "Area": 0.006,
+                                "Efficiency": 0.3,
+                                "Orientation": [
+                                    0,
+                                    1,
+                                    0
+                                ]
+                            },
+                            {
+                                "Name": "Plus_Z",
+                                "Area": 0.005,
+                                "Efficiency": 0.15,
+                                "Orientation": [
+                                    0,
+                                    0,
+                                    1
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ],
+            "required": [
+                "ADCS",
+                "Orbit",
+                "MassProperties",
+                "EPS"
+            ],
+            "properties": {
+                "ADCS": {
+                    "$id": "#/properties/Sapling/properties/ADCS",
+                    "type": "object",
+                    "title": "The ADCS schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": {},
+                    "examples": [
+                        {
+                            "State": "Fixed"
+                        }
+                    ],
+                    "required": [
+                        "State"
+                    ],
+                    "properties": {
+                        "State": {
+                            "$id": "#/properties/Sapling/properties/ADCS/properties/State",
+                            "type": "string",
+                            "title": "The State schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": "",
+                            "examples": [
+                                "Fixed"
+                            ]
+                        }
+                    },
+                    "additionalProperties": true
+                },
+                "Orbit": {
+                    "$id": "#/properties/Sapling/properties/Orbit",
+                    "type": "object",
+                    "title": "The Orbit schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": {},
+                    "examples": [
+                        {
+                            "A": 7083.1364,
+                            "E": 0.0,
+                            "I": 98.2083789592433,
+                            "RAAN": 280.26791820885,
+                            "W": 171.130489033293,
+                            "TA": 171.130489033293
+                        }
+                    ],
+                    "required": [
+                        "A",
+                        "E",
+                        "I",
+                        "RAAN",
+                        "W",
+                        "TA"
+                    ],
+                    "properties": {
+                        "A": {
+                            "$id": "#/properties/Sapling/properties/Orbit/properties/A",
+                            "type": "number",
+                            "title": "The A schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": 0.0,
+                            "examples": [
+                                7083.1364
+                            ]
+                        },
+                        "E": {
+                            "$id": "#/properties/Sapling/properties/Orbit/properties/E",
+                            "type": "number",
+                            "title": "The E schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": 0.0,
+                            "examples": [
+                                0.0
+                            ]
+                        },
+                        "I": {
+                            "$id": "#/properties/Sapling/properties/Orbit/properties/I",
+                            "type": "number",
+                            "title": "The I schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": 0.0,
+                            "examples": [
+                                98.2083789592433
+                            ]
+                        },
+                        "RAAN": {
+                            "$id": "#/properties/Sapling/properties/Orbit/properties/RAAN",
+                            "type": "number",
+                            "title": "The RAAN schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": 0.0,
+                            "examples": [
+                                280.26791820885
+                            ]
+                        },
+                        "W": {
+                            "$id": "#/properties/Sapling/properties/Orbit/properties/W",
+                            "type": "number",
+                            "title": "The W schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": 0.0,
+                            "examples": [
+                                171.130489033293
+                            ]
+                        },
+                        "TA": {
+                            "$id": "#/properties/Sapling/properties/Orbit/properties/TA",
+                            "type": "number",
+                            "title": "The TA schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": 0.0,
+                            "examples": [
+                                171.130489033293
+                            ]
+                        }
+                    },
+                    "additionalProperties": true
+                },
+                "MassProperties": {
+                    "$id": "#/properties/Sapling/properties/MassProperties",
+                    "type": "object",
+                    "title": "The MassProperties schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": {},
+                    "examples": [
+                        {
+                            "VehicleDryMass": 1.33,
+                            "VehicleDryMOI": [
+                                [
+                                    0.5,
+                                    0.0,
+                                    0.0
+                                ],
+                                [
+                                    0.0,
+                                    0.5,
+                                    0
+                                ],
+                                [
+                                    0.0,
+                                    0.0,
+                                    0.5
+                                ]
+                            ]
+                        }
+                    ],
+                    "required": [
+                        "VehicleDryMass",
+                        "VehicleDryMOI"
+                    ],
+                    "properties": {
+                        "VehicleDryMass": {
+                            "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMass",
+                            "type": "number",
+                            "title": "The VehicleDryMass schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": 0.0,
+                            "examples": [
+                                1.33
+                            ]
+                        },
+                        "VehicleDryMOI": {
+                            "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI",
+                            "type": "array",
+                            "title": "The VehicleDryMOI schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": [],
+                            "examples": [
+                                [
+                                    [
+                                        0.5,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.5,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "additionalItems": true,
+                            "items": {
+                                "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items",
+                                "anyOf": [
+                                    {
+                                        "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/0",
+                                        "type": "array",
+                                        "title": "The first anyOf schema",
+                                        "description": "An explanation about the purpose of this instance.",
+                                        "default": [],
+                                        "examples": [
+                                            [
+                                                0.5,
+                                                0.0
+                                            ]
+                                        ],
+                                        "additionalItems": true,
+                                        "items": {
+                                            "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/0/items",
+                                            "anyOf": [
+                                                {
+                                                    "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/0/items/anyOf/0",
+                                                    "type": "number",
+                                                    "title": "The first anyOf schema",
+                                                    "description": "An explanation about the purpose of this instance.",
+                                                    "default": 0.0,
+                                                    "examples": [
+                                                        0.5,
+                                                        0.0
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/1",
+                                        "type": "array",
+                                        "title": "The second anyOf schema",
+                                        "description": "An explanation about the purpose of this instance.",
+                                        "default": [],
+                                        "examples": [
+                                            [
+                                                0.0,
+                                                0.5
+                                            ]
+                                        ],
+                                        "additionalItems": true,
+                                        "items": {
+                                            "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/1/items",
+                                            "anyOf": [
+                                                {
+                                                    "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/1/items/anyOf/0",
+                                                    "type": "number",
+                                                    "title": "The first anyOf schema",
+                                                    "description": "An explanation about the purpose of this instance.",
+                                                    "default": 0.0,
+                                                    "examples": [
+                                                        0.0,
+                                                        0.5
+                                                    ]
+                                                },
+                                                {
+                                                    "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/1/items/anyOf/1",
+                                                    "type": "integer",
+                                                    "title": "The second anyOf schema",
+                                                    "description": "An explanation about the purpose of this instance.",
+                                                    "default": 0,
+                                                    "examples": [
+                                                        0
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/2",
+                                        "type": "array",
+                                        "title": "The third anyOf schema",
+                                        "description": "An explanation about the purpose of this instance.",
+                                        "default": [],
+                                        "examples": [
+                                            [
+                                                0.0,
+                                                0.0
+                                            ]
+                                        ],
+                                        "additionalItems": true,
+                                        "items": {
+                                            "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/2/items",
+                                            "anyOf": [
+                                                {
+                                                    "$id": "#/properties/Sapling/properties/MassProperties/properties/VehicleDryMOI/items/anyOf/2/items/anyOf/0",
+                                                    "type": "number",
+                                                    "title": "The first anyOf schema",
+                                                    "description": "An explanation about the purpose of this instance.",
+                                                    "default": 0.0,
+                                                    "examples": [
+                                                        0.0,
+                                                        0.5
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "additionalProperties": true
+                },
+                "EPS": {
+                    "$id": "#/properties/Sapling/properties/EPS",
+                    "type": "object",
+                    "title": "The EPS schema",
+                    "description": "An explanation about the purpose of this instance.",
+                    "default": {},
+                    "examples": [
+                        {
+                            "Panels": [
+                                {
+                                    "Name": "Minus_X",
+                                    "Area": 0.006,
+                                    "Efficiency": 0.3,
+                                    "Orientation": [
+                                        -1,
+                                        0,
+                                        0
+                                    ]
+                                },
+                                {
+                                    "Name": "Minus_Y",
+                                    "Area": 0.006,
+                                    "Efficiency": 0.3,
+                                    "Orientation": [
+                                        0,
+                                        -1,
+                                        0
+                                    ]
+                                },
+                                {
+                                    "Name": "Minus_Z",
+                                    "Area": 0.005,
+                                    "Efficiency": 0.15,
+                                    "Orientation": [
+                                        0,
+                                        0,
+                                        -1
+                                    ]
+                                },
+                                {
+                                    "Name": "Plus_X",
+                                    "Area": 0.006,
+                                    "Efficiency": 0.3,
+                                    "Orientation": [
+                                        1,
+                                        0,
+                                        0
+                                    ]
+                                },
+                                {
+                                    "Name": "Plus_Y",
+                                    "Area": 0.006,
+                                    "Efficiency": 0.3,
+                                    "Orientation": [
+                                        0,
+                                        1,
+                                        0
+                                    ]
+                                },
+                                {
+                                    "Name": "Plus_Z",
+                                    "Area": 0.005,
+                                    "Efficiency": 0.15,
+                                    "Orientation": [
+                                        0,
+                                        0,
+                                        1
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "required": [
+                        "Panels"
+                    ],
+                    "properties": {
+                        "Panels": {
+                            "$id": "#/properties/Sapling/properties/EPS/properties/Panels",
+                            "type": "array",
+                            "title": "The Panels schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": [],
+                            "examples": [
+                                [
+                                    {
+                                        "Name": "Minus_X",
+                                        "Area": 0.006,
+                                        "Efficiency": 0.3,
+                                        "Orientation": [
+                                            -1,
+                                            0,
+                                            0
+                                        ]
+                                    },
+                                    {
+                                        "Name": "Minus_Y",
+                                        "Area": 0.006,
+                                        "Efficiency": 0.3,
+                                        "Orientation": [
+                                            0,
+                                            -1,
+                                            0
+                                        ]
+                                    }
+                                ]
+                            ],
+                            "additionalItems": true,
+                            "items": {
+                                "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items",
+                                "anyOf": [
+                                    {
+                                        "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items/anyOf/0",
+                                        "type": "object",
+                                        "title": "The first anyOf schema",
+                                        "description": "An explanation about the purpose of this instance.",
+                                        "default": {},
+                                        "examples": [
+                                            {
+                                                "Name": "Minus_X",
+                                                "Area": 0.006,
+                                                "Efficiency": 0.3,
+                                                "Orientation": [
+                                                    -1,
+                                                    0,
+                                                    0
+                                                ]
+                                            }
+                                        ],
+                                        "required": [
+                                            "Name",
+                                            "Area",
+                                            "Efficiency",
+                                            "Orientation"
+                                        ],
+                                        "properties": {
+                                            "Name": {
+                                                "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items/anyOf/0/properties/Name",
+                                                "type": "string",
+                                                "title": "The Name schema",
+                                                "description": "An explanation about the purpose of this instance.",
+                                                "default": "",
+                                                "examples": [
+                                                    "Minus_X"
+                                                ]
+                                            },
+                                            "Area": {
+                                                "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items/anyOf/0/properties/Area",
+                                                "type": "number",
+                                                "title": "The Area schema",
+                                                "description": "An explanation about the purpose of this instance.",
+                                                "default": 0.0,
+                                                "examples": [
+                                                    0.006
+                                                ]
+                                            },
+                                            "Efficiency": {
+                                                "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items/anyOf/0/properties/Efficiency",
+                                                "type": "number",
+                                                "title": "The Efficiency schema",
+                                                "description": "An explanation about the purpose of this instance.",
+                                                "default": 0.0,
+                                                "examples": [
+                                                    0.3
+                                                ]
+                                            },
+                                            "Orientation": {
+                                                "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items/anyOf/0/properties/Orientation",
+                                                "type": "array",
+                                                "title": "The Orientation schema",
+                                                "description": "An explanation about the purpose of this instance.",
+                                                "default": [],
+                                                "examples": [
+                                                    [
+                                                        -1,
+                                                        0
+                                                    ]
+                                                ],
+                                                "additionalItems": true,
+                                                "items": {
+                                                    "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items/anyOf/0/properties/Orientation/items",
+                                                    "anyOf": [
+                                                        {
+                                                            "$id": "#/properties/Sapling/properties/EPS/properties/Panels/items/anyOf/0/properties/Orientation/items/anyOf/0",
+                                                            "type": "integer",
+                                                            "title": "The first anyOf schema",
+                                                            "description": "An explanation about the purpose of this instance.",
+                                                            "default": 0,
+                                                            "examples": [
+                                                                -1,
+                                                                0
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "additionalProperties": true
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "additionalProperties": true
+                }
+            },
+            "additionalProperties": true
+        },
+        "GroundStations": {
+            "$id": "#/properties/GroundStations",
+            "type": "array",
+            "title": "The GroundStations schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": [],
+            "examples": [
+                [
+                    {
+                        "Name": "Durand",
+                        "Height": 70,
+                        "Latitude": 37.4269,
+                        "Longitude": -122.1733
+                    }
+                ]
+            ],
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/GroundStations/items",
+                "anyOf": [
+                    {
+                        "$id": "#/properties/GroundStations/items/anyOf/0",
+                        "type": "object",
+                        "title": "The first anyOf schema",
+                        "description": "An explanation about the purpose of this instance.",
+                        "default": {},
+                        "examples": [
+                            {
+                                "Name": "Durand",
+                                "Height": 70,
+                                "Latitude": 37.4269,
+                                "Longitude": -122.1733
+                            }
+                        ],
+                        "required": [
+                            "Name",
+                            "Height",
+                            "Latitude",
+                            "Longitude"
+                        ],
+                        "properties": {
+                            "Name": {
+                                "$id": "#/properties/GroundStations/items/anyOf/0/properties/Name",
+                                "type": "string",
+                                "title": "The Name schema",
+                                "description": "An explanation about the purpose of this instance.",
+                                "default": "",
+                                "examples": [
+                                    "Durand"
+                                ]
+                            },
+                            "Height": {
+                                "$id": "#/properties/GroundStations/items/anyOf/0/properties/Height",
+                                "type": "integer",
+                                "title": "The Height schema",
+                                "description": "An explanation about the purpose of this instance.",
+                                "default": 0,
+                                "examples": [
+                                    70
+                                ]
+                            },
+                            "Latitude": {
+                                "$id": "#/properties/GroundStations/items/anyOf/0/properties/Latitude",
+                                "type": "number",
+                                "title": "The Latitude schema",
+                                "description": "An explanation about the purpose of this instance.",
+                                "default": 0.0,
+                                "examples": [
+                                    37.4269
+                                ]
+                            },
+                            "Longitude": {
+                                "$id": "#/properties/GroundStations/items/anyOf/0/properties/Longitude",
+                                "type": "number",
+                                "title": "The Longitude schema",
+                                "description": "An explanation about the purpose of this instance.",
+                                "default": 0.0,
+                                "examples": [
+                                    -122.1733
+                                ]
+                            }
+                        },
+                        "additionalProperties": true
+                    }
+                ]
+            }
+        }
+    },
+    "additionalProperties": true
+}

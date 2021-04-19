@@ -5,7 +5,7 @@ import json
 
 # load config data, power generation data
 configFile = open('./configuration/config.json')
-generationFile = open('./configuration/powerGenerationData.json')
+generationFile = open('/path/to/power/generation/data.json')
 config = json.load(configFile)
 generationData = json.load(generationFile)
 configFile.close()
@@ -31,7 +31,6 @@ totalPower = map(lambda e: e['TotalPower'], generationData)
 totalPowerSMA = np.convolve(totalPower, np.ones(24), 'valid') / 24  # 2hr SMA
 totalPowerSMA = totalPowerSMA.tolist() + [sum(totalPower) / len(totalPower)]*(
     len(totalPower) - len(totalPowerSMA))  # pad with avg to make it the same length
-
 idlePower = map(lambda e: modesPowerRates['idle'], generationData)
 deploymentPower = map(lambda e: phasesPowerRates['deployment'], generationData)
 operationsPower = map(
@@ -47,7 +46,7 @@ plt.plot(times, totalPowerSMA, color='green', label="Generated SMA")
 plt.plot(times, idlePower, color='orange', label='Idle')
 plt.plot(times, operationsPower, color='blue', label="Mission ops")
 plt.plot(times, lowPower, color='darkred', label="Low power")
-# plt.plot(deploymentPower, color='pink', label='Deployment')
+# plt.plot(times, deploymentPower, color='pink', label='Deployment')
 
 plt.legend()
 plt.show()

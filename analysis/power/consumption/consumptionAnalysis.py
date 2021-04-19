@@ -3,6 +3,36 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import json
 
+
+def toDatetime(epoch):
+    return dt.datetime.strptime(epoch[:-10], '%b %d %Y %H:%M:%S')
+
+
+def simulate(config):
+    batteryCharge = config['battery']['initialCharge']
+    batteryCapacity = config['battery']['capacity']
+
+    mode = "payload"
+    for i, current in enumerate(generationData):
+        if i == 0:
+            continue
+        previous = generationData[i-1]
+        if batteryCharge < 5:
+            mode = "low power"
+        if batteryCharge < 10:
+            mode = "recharge"
+        elif batteryCharge > batteryCapacity * 0.95:
+            mode = "payload"
+
+        tDelta = (toDatetime(current['Epoch']) -
+                  toDatetime(previous['Epoch'])).seconds/3600.0
+        batteryCharge -= modesPowerRates[mode] * tDelta
+        batteryCharge += (current['TotalPower'] +
+                          previous['TotalPower']) / 2 * tDelta
+        batteryGraph.append(batteryCharge)
+
+    return batteryGraph
+
 # load config data, power generation data
 configFile = open('./configuration/config.json')
 generationFile = open('/path/to/power/generation/data.json')
@@ -24,9 +54,10 @@ for phase, phaseConfig in config['phases'].items():
             powerTotal += modesPowerRates[mode] * onPercent
     phasesPowerRates[phase] = powerTotal
 
+batteryGraph = simulate(config)
+
 # graph data
-times = map(lambda e: dt.datetime.strptime(
-    e['Epoch'][:-10], '%b %d %Y %H:%M:%S'), generationData)
+times = map(lambda e: toDatetime(e['Epoch']), generationData)
 totalPower = map(lambda e: e['TotalPower'], generationData)
 totalPowerSMA = np.convolve(totalPower, np.ones(24), 'valid') / 24  # 2hr SMA
 totalPowerSMA = totalPowerSMA.tolist() + [sum(totalPower) / len(totalPower)]*(
@@ -41,11 +72,12 @@ lowPower = map(
 plt.title("Power Consumption Analysis")
 plt.xlabel('time')
 plt.ylabel('power (w)')
+plt.plot(times, batteryGraph, color='blue', label='Battery')
 plt.plot(times, totalPower, color='lightgreen', label="power generated")
-plt.plot(times, totalPowerSMA, color='green', label="Generated SMA")
-plt.plot(times, idlePower, color='orange', label='Idle')
-plt.plot(times, operationsPower, color='blue', label="Mission ops")
-plt.plot(times, lowPower, color='darkred', label="Low power")
+# plt.plot(times, totalPowerSMA, color='green', label="Generated SMA")
+# plt.plot(times, idlePower, color='orange', label='Idle')
+# plt.plot(times, operationsPower, color='blue', label="Mission ops")
+# plt.plot(times, lowPower, color='darkred', label="Low power")
 # plt.plot(times, deploymentPower, color='pink', label='Deployment')
 
 plt.legend()

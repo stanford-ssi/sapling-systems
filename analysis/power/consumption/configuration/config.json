@@ -36,5 +36,9 @@
     "payload": {
       "power consumption": 12.5685
     }
+  },
+  "battery": {
+    "capacity": 60,
+    "initialCharge": 40
   }
 }

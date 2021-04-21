@@ -9,10 +9,12 @@ def toDatetime(epoch):
 
 
 def simulate(config):
+    mode = "payload"  # initial mode
     batteryCharge = config['battery']['initialCharge']
     batteryCapacity = config['battery']['capacity']
+    batteryGraph = [batteryCharge]
+    modeLog = [mode]
 
-    mode = "payload"
     for i, current in enumerate(generationData):
         if i == 0:
             continue
@@ -30,12 +32,22 @@ def simulate(config):
         batteryCharge += (current['TotalPower'] +
                           previous['TotalPower']) / 2 * tDelta
         batteryGraph.append(batteryCharge)
+        modeLog.append(mode)
 
-    return batteryGraph
+    return batteryGraph, modeLog
+
+
+def stats(modeLog):
+    length = float(len(modeLog))
+    stats = {}
+    for mode in config['modes'].keys():
+        stats[mode] = {'percentOn': modeLog.count(mode) / length}
+    return stats
+
 
 # load config data, power generation data
 configFile = open('./configuration/config.json')
-generationFile = open('/path/to/power/generation/data.json')
+generationFile = open('../generation/output/powerGenerationData.json')
 config = json.load(configFile)
 generationData = json.load(generationFile)
 configFile.close()
@@ -54,7 +66,9 @@ for phase, phaseConfig in config['phases'].items():
             powerTotal += modesPowerRates[mode] * onPercent
     phasesPowerRates[phase] = powerTotal
 
-batteryGraph = simulate(config)
+batteryGraph, modeLog = simulate(config)
+
+print(stats(modeLog))
 
 # graph data
 times = map(lambda e: toDatetime(e['Epoch']), generationData)

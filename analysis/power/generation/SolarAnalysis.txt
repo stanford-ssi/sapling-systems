@@ -599,9 +599,14 @@ While (MetaSC.sc.ElapsedTime < TimeSpan.FromSeconds(config.Simulation.Length));
 	Console.CurrentTextColor = ColorTools.White;
 	
 	// TODO Tumbling Attitude Reports
+	If (MetaSC.ADCS.State == "Tumbling");
+		// do nothing
+		
+	ElseIf (MetaSC.ADCS.State == "Fixed");
+		// do nothing
 	
 	// Fixed Attitude Reports
-	If (MetaSC.ADCS.State == "Zenith-pointing");
+	ElseIf (MetaSC.ADCS.State == "Zenith-pointing");
 		//Determine contact with the ground sites first
 	    //Slew to face the earth
 	    MetaSC.sc.AttitudeRefFrame = "MJ2000";
@@ -658,10 +663,9 @@ While (MetaSC.sc.ElapsedTime < TimeSpan.FromSeconds(config.Simulation.Length));
 	    	MetaSC.ADCS.Vectors.ToSun.Active = 0;
 	        Console.CurrentTextColor = ColorTools.Khaki;
 	    End;
-	End;
-	
+
 	// Changing Attitude Setup
-	If (MetaSC.ADCS.State == "Changing");
+	ElseIf (MetaSC.ADCS.State == "Changing");
 
 	    // Block Contact Analysis
 	    // Determine contact with the ground sites first
@@ -787,7 +791,6 @@ While (MetaSC.sc.ElapsedTime < TimeSpan.FromSeconds(config.Simulation.Length));
 	        Update vwFixed;
 	        Break;
 	    Case "Zenith-pointing":
-	        Update vwFixed;
 	        Break;
 	    Case "Changing":
 	    	Update vwChangingAttitude;

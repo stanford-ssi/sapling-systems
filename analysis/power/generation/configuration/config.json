@@ -1,7 +1,11 @@
 {
-    "Sapling": {
+    "Simulation": {
+		"Length" : 86400.0,
+		"TimeStep": 10.0
+	},
+	"Sapling": {
         "ADCS": {
-            "FixedAttitude": 1        
+            "State": "Fixed"      
         },
         "Orbit": {
             "A": 7083.1364,
@@ -23,13 +27,13 @@
             "Panels": [
                 {   
                     "Name": "Minus_X",
-                    "Area": 0.01,
+                    "Area": 0.006,
                     "Efficiency": 0.3,
                     "Orientation": [-1, 0, 0]
                 },
                 {   
                     "Name": "Minus_Y",
-                    "Area": 0.01,
+                    "Area": 0.006,
                     "Efficiency": 0.3,
                     "Orientation": [0, -1, 0]
                 },
@@ -41,13 +45,13 @@
                 },
                 {   
                     "Name": "Plus_X",
-                    "Area": 0.01,
+                    "Area": 0.006,
                     "Efficiency": 0.3,
                     "Orientation": [1, 0, 0]
                 },
                 {   
                     "Name": "Plus_Y",
-                    "Area": 0.01,
+                    "Area": 0.006,
                     "Efficiency": 0.3,
                     "Orientation": [0, 1, 0]
                 },

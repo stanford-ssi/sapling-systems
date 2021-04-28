@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
 import json
+import argparse
 
 
 def toDatetime(epoch):
@@ -45,9 +46,23 @@ def stats(modeLog):
     return stats
 
 
+# command line options
+parser = argparse.ArgumentParser(
+    description='Graph power usage based on a config file')
+parser.add_argument('config', metavar='C', type=str,
+                    help='Path to a config json file. See documentation for schema')
+parser.add_argument('generation_data', metavar='D', type=str,
+                    help='Path to a power generation analysis json file')
+
+args = parser.parse_args()
+argsDict = vars(args)
+
+configFilePath = argsDict['config']
+generationFilePath = argsDict['generation_data']
+
 # load config data, power generation data
-configFile = open('./configuration/config.json')
-generationFile = open('../generation/output/powerGenerationData.json')
+configFile = open(configFilePath)
+generationFile = open(generationFilePath)
 config = json.load(configFile)
 generationData = json.load(generationFile)
 configFile.close()
@@ -73,11 +88,13 @@ print(stats(modeLog))
 # graph data
 times = map(lambda e: toDatetime(e['Epoch']), generationData)
 totalPower = map(lambda e: e['TotalPower'], generationData)
-totalPowerSMA = np.convolve(totalPower, np.ones(24), 'valid') / 24  # 2hr SMA
+totalPowerSMA = np.convolve(
+    totalPower, np.ones(24), 'valid') / 24  # 2hr SMA
 totalPowerSMA = totalPowerSMA.tolist() + [sum(totalPower) / len(totalPower)]*(
     len(totalPower) - len(totalPowerSMA))  # pad with avg to make it the same length
 idlePower = map(lambda e: modesPowerRates['idle'], generationData)
-deploymentPower = map(lambda e: phasesPowerRates['deployment'], generationData)
+deploymentPower = map(
+    lambda e: phasesPowerRates['deployment'], generationData)
 operationsPower = map(
     lambda e: phasesPowerRates['mission operations'], generationData)
 lowPower = map(

@@ -81,35 +81,48 @@ for phase, phaseConfig in config['phases'].items():
             powerTotal += modesPowerRates[mode] * onPercent
     phasesPowerRates[phase] = powerTotal
 
-batteryGraph, modeLog = simulate(config)
-
-print(stats(modeLog))
-
-# graph data
+# graph
+graphConfig = config['graph']
 times = map(lambda e: toDatetime(e['Epoch']), generationData)
-totalPower = map(lambda e: e['TotalPower'], generationData)
-totalPowerSMA = np.convolve(
-    totalPower, np.ones(24), 'valid') / 24  # 2hr SMA
-totalPowerSMA = totalPowerSMA.tolist() + [sum(totalPower) / len(totalPower)]*(
-    len(totalPower) - len(totalPowerSMA))  # pad with avg to make it the same length
-idlePower = map(lambda e: modesPowerRates['idle'], generationData)
-deploymentPower = map(
-    lambda e: phasesPowerRates['deployment'], generationData)
-operationsPower = map(
-    lambda e: phasesPowerRates['mission operations'], generationData)
-lowPower = map(
-    lambda e: modesPowerRates['low power'], generationData)
 
 plt.title("Power Consumption Analysis")
 plt.xlabel('time')
 plt.ylabel('power (w)')
-plt.plot(times, batteryGraph, color='blue', label='Battery')
-plt.plot(times, totalPower, color='lightgreen', label="power generated")
-# plt.plot(times, totalPowerSMA, color='green', label="Generated SMA")
-# plt.plot(times, idlePower, color='orange', label='Idle')
-# plt.plot(times, operationsPower, color='blue', label="Mission ops")
-# plt.plot(times, lowPower, color='darkred', label="Low power")
-# plt.plot(times, deploymentPower, color='pink', label='Deployment')
+
+# battery simulation and graph
+if graphConfig['battery charge']:
+    batteryGraph, modeLog = simulate(config)
+    plt.plot(times, batteryGraph, color='blue', label='battery charge')
+    print("battery simulation stats")
+    print(stats(modeLog))
+
+# power generation graphs
+totalPower = []
+if graphConfig['power generated']:
+    totalPower = map(lambda e: e['TotalPower'], generationData)
+    plt.plot(times, totalPower, color='lightgreen', label="power generated")
+if graphConfig['power generated SMA']:
+    if not totalPower:
+        totalPower = map(lambda e: e['TotalPower'], generationData)
+    totalPowerSMA = np.convolve(
+        totalPower, np.ones(24), 'valid') / 24  # 2hr SMA
+    totalPowerSMA = totalPowerSMA.tolist() + [sum(totalPower) / len(totalPower)]*(
+        len(totalPower) - len(totalPowerSMA))  # pad with avg to make it the same length
+    plt.plot(times, totalPowerSMA, color='green', label="power generated SMA")
+
+# graph modes:
+for mode, on in graphConfig['modes'].items():
+    if on:
+        plot = map(
+            lambda e: modesPowerRates[mode], generationData)
+        plt.plot(times, plot, label=mode)
+
+# graph phases:
+for phase, on in graphConfig['phases'].items():
+    if on:
+        plot = map(
+            lambda e: phasesPowerRates[phase], generationData)
+        plt.plot(times, plot, label=phase)
 
 plt.legend()
 plt.show()

@@ -40,5 +40,26 @@
   "battery": {
     "capacity": 60,
     "initialCharge": 40
+  },
+  "graph": {
+    "battery charge": true,
+    "power generated": true,
+    "power generated SMA": false,
+
+    "phases": {
+      "deployment": false,
+      "first contact": false,
+      "mission operations": false,
+      "decomissioning": false
+    },
+
+    "modes": {
+      "deploy": false,
+      "detumble": false,
+      "idle": false,
+      "low power": false,
+      "recharge": false,
+      "payload": false
+    }
   }
 }

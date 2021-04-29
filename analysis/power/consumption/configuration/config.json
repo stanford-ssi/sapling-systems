@@ -1,0 +1,65 @@
+{
+  "phases": {
+    "deployment": {
+      "modes": {
+        "deploy": 0.2,
+        "detumble": 0.3,
+        "idle": 0.5
+      }
+    },
+    "first contact": {},
+    "mission operations": {
+      "modes": {
+        "detumble": 0.04,
+        "recharge": 0.935,
+        "payload": 0.025
+      }
+    },
+    "decomissioning": {}
+  },
+  "modes": {
+    "deploy": {
+      "power consumption": 1.4139
+    },
+    "detumble": {
+      "power consumption": 10.9187
+    },
+    "idle": {
+      "power consumption": 1.1457
+    },
+    "low power": {
+      "power consumption": 0.7857
+    },
+    "recharge": {
+      "power consumption": 0.7857
+    },
+    "payload": {
+      "power consumption": 12.5685
+    }
+  },
+  "battery": {
+    "capacity": 60,
+    "initialCharge": 40
+  },
+  "graph": {
+    "battery charge": true,
+    "power generated": true,
+    "power generated SMA": false,
+
+    "phases": {
+      "deployment": false,
+      "first contact": false,
+      "mission operations": false,
+      "decomissioning": false
+    },
+
+    "modes": {
+      "deploy": false,
+      "detumble": false,
+      "idle": false,
+      "low power": false,
+      "recharge": false,
+      "payload": false
+    }
+  }
+}

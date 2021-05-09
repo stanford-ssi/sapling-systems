@@ -27,7 +27,7 @@ gs_rf_chain = [
 ]
 
 geometry = pylink.Geometry(
-    apoapsis_altitude_km=550, periapsis_altitude_km=500, min_elevation_deg=20
+    apoapsis_altitude_km=450, periapsis_altitude_km=450, min_elevation_deg=20
 )
 
 sat_rx_antenna = pylink.Antenna(
@@ -64,7 +64,7 @@ gs_transmitter = pylink.Transmitter(
 )
 
 sat_transmitter = pylink.Transmitter(
-    tx_power_at_pa_dbw=1.5, name="Satellite XBand Transmitter"
+    tx_power_at_pa_dbw=1.5, name="Satellite SBand Transmitter"
 )
 
 rx_interconnect = pylink.Interconnect(is_rx=True)
@@ -72,22 +72,10 @@ rx_interconnect = pylink.Interconnect(is_rx=True)
 
 tx_interconnect = pylink.Interconnect(is_rx=False)
 
-
-x_channel = pylink.Channel(
-    bitrate_hz=1e6,
-    allocation_hz=500e4,
-    center_freq_mhz=8200,
-    atmospheric_loss_db=1,
-    ionospheric_loss_db=1,
-    rain_loss_db=2,
-    multipath_fading_db=0,
-    polarization_mismatch_loss_db=3,
-)
-
 s_channel = pylink.Channel(
     bitrate_hz=500e3,
     allocation_hz=5e6,
-    center_freq_mhz=2022.5,
+    center_freq_mhz=2400.5,
     atmospheric_loss_db=0.5,
     ionospheric_loss_db=0.5,
     rain_loss_db=1,
@@ -105,11 +93,11 @@ DOWNLINK = pylink.DAGModel(
         sat_transmitter,
         sat_tx_antenna,
         gs_receiver,
-        x_channel,
+        s_channel,
         rx_interconnect,
         tx_interconnect,
         modulation,
-        pylink.LinkBudget(name="Example XBand Downlink", is_downlink=True),
+        pylink.LinkBudget(name="SBand Downlink", is_downlink=True),
     ]
 )
 
@@ -121,6 +109,6 @@ UPLINK = pylink.DAGModel(
         gs_transmitter,
         gs_tx_antenna,
         s_channel,
-        pylink.LinkBudget(name="Example SBand Uplink", is_downlink=False),
+        pylink.LinkBudget(name="SBand Uplink", is_downlink=False),
     ]
 )

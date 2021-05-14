@@ -14,7 +14,6 @@ sat_pattern = pylink.pattern_generator(3)
 
 sat_rf_chain = [
     pylink.Element(name="Cables", gain_db=-0.75, noise_figure_db=0.75),
-    pylink.Element(name="LNA", gain_db=35, noise_figure_db=2.75),
     pylink.Element(name="Filter", gain_db=-3.5, noise_figure_db=3.5),
     pylink.Element(name="Demodulator", gain_db=0, noise_figure_db=15),
 ]

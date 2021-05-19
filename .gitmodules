@@ -1,0 +1,3 @@
+[submodule "analysis/modules/pylink"]
+	path = analysis/modules/pylink
+	url = git@github.com:stanford-ssi/pylink.git

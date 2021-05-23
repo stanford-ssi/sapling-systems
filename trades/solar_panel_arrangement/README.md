@@ -1,5 +1,9 @@
 # Solar Panel Arrangement
 
+Some of the panels may be inconsistent in thin vs. normal models, we are preliminary planning to use only the thin (denoted with "T" in the product number) solar panels.
+
+[DigiKey BOM with components](https://www.digikey.com/BOM/Create/CreateSharedBom?bomId=864345)
+
 ## ±X
 
 ### Components

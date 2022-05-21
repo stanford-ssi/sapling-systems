@@ -1,0 +1,22 @@
+CM Standardized model for OCF feedpoint impedance study
+CM #14 AWG.  1/2 wavelength feedpoint over ground at 28.4 mc. 
+CM Velocity factor to hit target frequency
+CM Variable Off-Center feed ratio. 
+CM Dick Reid, KK4OBI, 2016
+CM
+CE
+SY F=437                        'Frequency target
+SY hgh=5.282                    '150/28.4=5.282=1/2 wl feedpoint height - meters
+SY R=0.5                           'off center ratio. 0.5=center feedpoint
+SY vel=0.974185               'Optimized #14 AWG velocity factor to hit frequency target
+SY L=150/F*R*vel            'ratio arm length - meters
+SY oth=150/F*(1-R)*vel    'other arm length - meters
+GW    2    25    -L    0    hgh    0    0    hgh    #14    'ratio arm
+GW    3    25    0    0    hgh    oth    0    hgh    #14    'other arm
+GE    -1
+GN    2    0    0    0    14    6.e-3
+EK
+EX    0    2    25    0    1    0    0
+EX    0    3    1    0    1    0    0
+FR    0    0    0    0    28.4    0
+EN

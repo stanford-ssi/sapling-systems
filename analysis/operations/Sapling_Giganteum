@@ -1,0 +1,353 @@
+%General Mission Analysis Tool(GMAT) Script
+%Created: 2023-04-04 20:59:18
+
+
+%----------------------------------------
+%---------- Spacecraft
+%----------------------------------------
+
+Create Spacecraft Sapling_Giganteum;
+GMAT Sapling_Giganteum.DateFormat = UTCGregorian;
+GMAT Sapling_Giganteum.Epoch = '11 Apr 2023 07:52:46.950';
+GMAT Sapling_Giganteum.CoordinateSystem = EarthFixed;
+GMAT Sapling_Giganteum.DisplayStateType = Cartesian;
+GMAT Sapling_Giganteum.X = 5219.266192999999;
+GMAT Sapling_Giganteum.Y = 4016.002640000002;
+GMAT Sapling_Giganteum.Z = 2023.656393;
+GMAT Sapling_Giganteum.VX = -0.8411080000000001;
+GMAT Sapling_Giganteum.VY = -2.545173000000001;
+GMAT Sapling_Giganteum.VZ = 7.199462000000001;
+GMAT Sapling_Giganteum.DryMass = 850;
+GMAT Sapling_Giganteum.Cd = 2.2;
+GMAT Sapling_Giganteum.Cr = 1.8;
+GMAT Sapling_Giganteum.DragArea = 15;
+GMAT Sapling_Giganteum.SRPArea = 1;
+GMAT Sapling_Giganteum.SPADDragScaleFactor = 1;
+GMAT Sapling_Giganteum.SPADSRPScaleFactor = 1;
+GMAT Sapling_Giganteum.AtmosDensityScaleFactor = 1;
+GMAT Sapling_Giganteum.ExtendedMassPropertiesModel = 'None';
+GMAT Sapling_Giganteum.NAIFId = -10000001;
+GMAT Sapling_Giganteum.NAIFIdReferenceFrame = -9000001;
+GMAT Sapling_Giganteum.OrbitColor = Red;
+GMAT Sapling_Giganteum.TargetColor = Teal;
+GMAT Sapling_Giganteum.OrbitErrorCovariance = [ 1e+70 0 0 0 0 0 ; 0 1e+70 0 0 0 0 ; 0 0 1e+70 0 0 0 ; 0 0 0 1e+70 0 0 ; 0 0 0 0 1e+70 0 ; 0 0 0 0 0 1e+70 ];
+GMAT Sapling_Giganteum.CdSigma = 1e+70;
+GMAT Sapling_Giganteum.CrSigma = 1e+70;
+GMAT Sapling_Giganteum.Id = 'SatId';
+GMAT Sapling_Giganteum.Attitude = CoordinateSystemFixed;
+GMAT Sapling_Giganteum.SPADSRPInterpolationMethod = Bilinear;
+GMAT Sapling_Giganteum.SPADSRPScaleFactorSigma = 1e+70;
+GMAT Sapling_Giganteum.SPADDragInterpolationMethod = Bilinear;
+GMAT Sapling_Giganteum.SPADDragScaleFactorSigma = 1e+70;
+GMAT Sapling_Giganteum.AtmosDensityScaleFactorSigma = 1e+70;
+GMAT Sapling_Giganteum.ModelFile = 'aura.3ds';
+GMAT Sapling_Giganteum.ModelOffsetX = 0;
+GMAT Sapling_Giganteum.ModelOffsetY = 0;
+GMAT Sapling_Giganteum.ModelOffsetZ = 0;
+GMAT Sapling_Giganteum.ModelRotationX = 0;
+GMAT Sapling_Giganteum.ModelRotationY = 0;
+GMAT Sapling_Giganteum.ModelRotationZ = 0;
+GMAT Sapling_Giganteum.ModelScale = 1;
+GMAT Sapling_Giganteum.AttitudeDisplayStateType = 'Quaternion';
+GMAT Sapling_Giganteum.AttitudeRateDisplayStateType = 'AngularVelocity';
+GMAT Sapling_Giganteum.AttitudeCoordinateSystem = EarthMJ2000Eq;
+GMAT Sapling_Giganteum.EulerAngleSequence = '321';
+
+Create Spacecraft Yearling;
+GMAT Yearling.DateFormat = UTCGregorian;
+GMAT Yearling.Epoch = '11 Apr 2023 07:53:38.750';
+GMAT Yearling.CoordinateSystem = EarthFixed;
+GMAT Yearling.DisplayStateType = Cartesian;
+GMAT Yearling.X = 5166.713227000001;
+GMAT Yearling.Y = 3877.849623000001;
+GMAT Yearling.Z = 2393.158201000001;
+GMAT Yearling.VX = -1.186053;
+GMAT Yearling.VY = -2.786284000000001;
+GMAT Yearling.VZ = 7.060352000000004;
+GMAT Yearling.DryMass = 850;
+GMAT Yearling.Cd = 2.2;
+GMAT Yearling.Cr = 1.8;
+GMAT Yearling.DragArea = 15;
+GMAT Yearling.SRPArea = 1;
+GMAT Yearling.SPADDragScaleFactor = 1;
+GMAT Yearling.SPADSRPScaleFactor = 1;
+GMAT Yearling.AtmosDensityScaleFactor = 1;
+GMAT Yearling.ExtendedMassPropertiesModel = 'None';
+GMAT Yearling.NAIFId = -10002001;
+GMAT Yearling.NAIFIdReferenceFrame = -9002001;
+GMAT Yearling.OrbitColor = [236 93 0];
+GMAT Yearling.TargetColor = LightGray;
+GMAT Yearling.OrbitErrorCovariance = [ 1e+70 0 0 0 0 0 ; 0 1e+70 0 0 0 0 ; 0 0 1e+70 0 0 0 ; 0 0 0 1e+70 0 0 ; 0 0 0 0 1e+70 0 ; 0 0 0 0 0 1e+70 ];
+GMAT Yearling.CdSigma = 1e+70;
+GMAT Yearling.CrSigma = 1e+70;
+GMAT Yearling.Id = 'SatId';
+GMAT Yearling.Attitude = CoordinateSystemFixed;
+GMAT Yearling.SPADSRPInterpolationMethod = Bilinear;
+GMAT Yearling.SPADSRPScaleFactorSigma = 1e+70;
+GMAT Yearling.SPADDragInterpolationMethod = Bilinear;
+GMAT Yearling.SPADDragScaleFactorSigma = 1e+70;
+GMAT Yearling.AtmosDensityScaleFactorSigma = 1e+70;
+GMAT Yearling.ModelFile = 'aura.3ds';
+GMAT Yearling.ModelOffsetX = 0;
+GMAT Yearling.ModelOffsetY = 0;
+GMAT Yearling.ModelOffsetZ = 0;
+GMAT Yearling.ModelRotationX = 0;
+GMAT Yearling.ModelRotationY = 0;
+GMAT Yearling.ModelRotationZ = 0;
+GMAT Yearling.ModelScale = 1;
+GMAT Yearling.AttitudeDisplayStateType = 'Quaternion';
+GMAT Yearling.AttitudeRateDisplayStateType = 'AngularVelocity';
+GMAT Yearling.AttitudeCoordinateSystem = EarthMJ2000Eq;
+GMAT Yearling.EulerAngleSequence = '321';
+
+%----------------------------------------
+%---------- GroundStations
+%----------------------------------------
+
+Create GroundStation Durand;
+GMAT Durand.OrbitColor = [224 155 0];
+GMAT Durand.TargetColor = [185 0 19];
+GMAT Durand.CentralBody = Earth;
+GMAT Durand.StateType = Spherical;
+GMAT Durand.HorizonReference = Sphere;
+GMAT Durand.Location1 = 37.42713;
+GMAT Durand.Location2 = 237.82667;
+GMAT Durand.Location3 = 0.06;
+GMAT Durand.Id = 'StationId';
+GMAT Durand.IonosphereModel = 'None';
+GMAT Durand.TroposphereModel = 'None';
+GMAT Durand.DataSource = 'Constant';
+GMAT Durand.Temperature = 295.1;
+GMAT Durand.Pressure = 1013.5;
+GMAT Durand.Humidity = 55;
+GMAT Durand.MinimumElevationAngle = 7;
+
+Create GroundStation Manoa;
+GMAT Manoa.OrbitColor = [224 154 0];
+GMAT Manoa.TargetColor = DarkGray;
+GMAT Manoa.CentralBody = Earth;
+GMAT Manoa.StateType = Spherical;
+GMAT Manoa.HorizonReference = Sphere;
+GMAT Manoa.Location1 = 21.2998;
+GMAT Manoa.Location2 = 202.1852;
+GMAT Manoa.Location3 = 0.06;
+GMAT Manoa.Id = 'StationId';
+GMAT Manoa.IonosphereModel = 'None';
+GMAT Manoa.TroposphereModel = 'None';
+GMAT Manoa.DataSource = 'Constant';
+GMAT Manoa.Temperature = 295.1;
+GMAT Manoa.Pressure = 1013.5;
+GMAT Manoa.Humidity = 55;
+GMAT Manoa.MinimumElevationAngle = 7;
+
+Create GroundStation CPP;
+GMAT CPP.OrbitColor = Thistle;
+GMAT CPP.TargetColor = DarkGray;
+GMAT CPP.CentralBody = Earth;
+GMAT CPP.StateType = Spherical;
+GMAT CPP.HorizonReference = Sphere;
+GMAT CPP.Location1 = 34.0556;
+GMAT CPP.Location2 = 242.1807;
+GMAT CPP.Location3 = 0.1;
+GMAT CPP.Id = 'StationId';
+GMAT CPP.IonosphereModel = 'None';
+GMAT CPP.TroposphereModel = 'None';
+GMAT CPP.DataSource = 'Constant';
+GMAT CPP.Temperature = 295.1;
+GMAT CPP.Pressure = 1013.5;
+GMAT CPP.Humidity = 55;
+GMAT CPP.MinimumElevationAngle = 7;
+
+Create GroundStation PDX;
+GMAT PDX.OrbitColor = Thistle;
+GMAT PDX.TargetColor = DarkGray;
+GMAT PDX.CentralBody = Earth;
+GMAT PDX.StateType = Spherical;
+GMAT PDX.HorizonReference = Sphere;
+GMAT PDX.Location1 = 45.5111;
+GMAT PDX.Location2 = 237.3167;
+GMAT PDX.Location3 = 0;
+GMAT PDX.Id = 'StationId';
+GMAT PDX.IonosphereModel = 'None';
+GMAT PDX.TroposphereModel = 'None';
+GMAT PDX.DataSource = 'Constant';
+GMAT PDX.Temperature = 295.1;
+GMAT PDX.Pressure = 1013.5;
+GMAT PDX.Humidity = 55;
+GMAT PDX.MinimumElevationAngle = 7;
+
+Create GroundStation PismoAirBNB;
+GMAT PismoAirBNB.OrbitColor = Thistle;
+GMAT PismoAirBNB.TargetColor = DarkGray;
+GMAT PismoAirBNB.CentralBody = Earth;
+GMAT PismoAirBNB.StateType = Spherical;
+GMAT PismoAirBNB.HorizonReference = Sphere;
+GMAT PismoAirBNB.Location1 = 35.14419000000001;
+GMAT PismoAirBNB.Location2 = 120.64434;
+GMAT PismoAirBNB.Location3 = 0;
+GMAT PismoAirBNB.Id = 'StationID';
+GMAT PismoAirBNB.IonosphereModel = 'None';
+GMAT PismoAirBNB.TroposphereModel = 'None';
+GMAT PismoAirBNB.DataSource = 'Constant';
+GMAT PismoAirBNB.Temperature = 295.1;
+GMAT PismoAirBNB.Pressure = 1013.5;
+GMAT PismoAirBNB.Humidity = 55;
+GMAT PismoAirBNB.MinimumElevationAngle = 7;
+
+
+
+
+
+
+
+
+%----------------------------------------
+%---------- ForceModels
+%----------------------------------------
+
+Create ForceModel DefaultProp_ForceModel;
+GMAT DefaultProp_ForceModel.CentralBody = Earth;
+GMAT DefaultProp_ForceModel.PrimaryBodies = {Earth};
+GMAT DefaultProp_ForceModel.Drag = None;
+GMAT DefaultProp_ForceModel.SRP = Off;
+GMAT DefaultProp_ForceModel.RelativisticCorrection = Off;
+GMAT DefaultProp_ForceModel.ErrorControl = RSSStep;
+GMAT DefaultProp_ForceModel.GravityField.Earth.Degree = 4;
+GMAT DefaultProp_ForceModel.GravityField.Earth.Order = 4;
+GMAT DefaultProp_ForceModel.GravityField.Earth.StmLimit = 100;
+GMAT DefaultProp_ForceModel.GravityField.Earth.PotentialFile = 'JGM2.cof';
+GMAT DefaultProp_ForceModel.GravityField.Earth.TideModel = 'None';
+
+%----------------------------------------
+%---------- Propagators
+%----------------------------------------
+
+Create Propagator DefaultProp;
+GMAT DefaultProp.FM = DefaultProp_ForceModel;
+GMAT DefaultProp.Type = RungeKutta89;
+GMAT DefaultProp.InitialStepSize = 60;
+GMAT DefaultProp.Accuracy = 9.999999999999999e-12;
+GMAT DefaultProp.MinStep = 0.001;
+GMAT DefaultProp.MaxStep = 2700;
+GMAT DefaultProp.MaxStepAttempts = 50;
+GMAT DefaultProp.StopIfAccuracyIsViolated = true;
+
+%----------------------------------------
+%---------- EventLocators
+%----------------------------------------
+
+Create ContactLocator ContactLocator1;
+GMAT ContactLocator1.Target = Sapling_Giganteum;
+GMAT ContactLocator1.Filename = 'PassesSaplingGiganteum.txt';
+GMAT ContactLocator1.InputEpochFormat = 'TAIModJulian';
+GMAT ContactLocator1.InitialEpoch = '21545';
+GMAT ContactLocator1.StepSize = 10;
+GMAT ContactLocator1.FinalEpoch = '21545.138';
+GMAT ContactLocator1.UseLightTimeDelay = true;
+GMAT ContactLocator1.UseStellarAberration = true;
+GMAT ContactLocator1.WriteReport = true;
+GMAT ContactLocator1.RunMode = Automatic;
+GMAT ContactLocator1.UseEntireInterval = true;
+GMAT ContactLocator1.Observers = {CPP, Durand, Manoa, PDX};
+GMAT ContactLocator1.LightTimeDirection = Transmit;
+GMAT ContactLocator1.LeftJustified = false;
+GMAT ContactLocator1.ReportPrecision = 6;
+GMAT ContactLocator1.ReportFormat = 'Legacy';
+GMAT ContactLocator1.IntervalStepSize = 0;
+GMAT ContactLocator1.ReportTimeFormat = 'UTCGregorian';
+
+Create ContactLocator ContactLocator2;
+GMAT ContactLocator2.Target = Yearling;
+GMAT ContactLocator2.Filename = 'PassesYearling.txt';
+GMAT ContactLocator2.InputEpochFormat = 'TAIModJulian';
+GMAT ContactLocator2.InitialEpoch = '21545';
+GMAT ContactLocator2.StepSize = 10;
+GMAT ContactLocator2.FinalEpoch = '21545.138';
+GMAT ContactLocator2.UseLightTimeDelay = true;
+GMAT ContactLocator2.UseStellarAberration = true;
+GMAT ContactLocator2.WriteReport = true;
+GMAT ContactLocator2.RunMode = Automatic;
+GMAT ContactLocator2.UseEntireInterval = true;
+GMAT ContactLocator2.Observers = {CPP, Durand, Manoa, PDX};
+GMAT ContactLocator2.LightTimeDirection = Transmit;
+GMAT ContactLocator2.LeftJustified = false;
+GMAT ContactLocator2.ReportPrecision = 6;
+GMAT ContactLocator2.ReportFormat = 'Legacy';
+GMAT ContactLocator2.IntervalStepSize = 0;
+GMAT ContactLocator2.ReportTimeFormat = 'UTCGregorian';
+
+%----------------------------------------
+%---------- Subscribers
+%----------------------------------------
+
+Create OrbitView DefaultOrbitView;
+GMAT DefaultOrbitView.SolverIterations = Current;
+GMAT DefaultOrbitView.UpperLeft = [ 0.3122448979591837 0.03242677824267783 ];
+GMAT DefaultOrbitView.Size = [ 0.4115646258503401 0.356694560669456 ];
+GMAT DefaultOrbitView.RelativeZOrder = 61;
+GMAT DefaultOrbitView.Maximized = false;
+GMAT DefaultOrbitView.Add = {Sapling_Giganteum, Yearling, Earth};
+GMAT DefaultOrbitView.CoordinateSystem = EarthMJ2000Eq;
+GMAT DefaultOrbitView.DrawObject = [ true true true ];
+GMAT DefaultOrbitView.DataCollectFrequency = 1;
+GMAT DefaultOrbitView.UpdatePlotFrequency = 50;
+GMAT DefaultOrbitView.NumPointsToRedraw = 0;
+GMAT DefaultOrbitView.ShowPlot = true;
+GMAT DefaultOrbitView.MaxPlotPoints = 20000;
+GMAT DefaultOrbitView.ShowLabels = true;
+GMAT DefaultOrbitView.ViewPointReference = Earth;
+GMAT DefaultOrbitView.ViewPointVector = [ 30000 0 0 ];
+GMAT DefaultOrbitView.ViewDirection = Earth;
+GMAT DefaultOrbitView.ViewScaleFactor = 1;
+GMAT DefaultOrbitView.ViewUpCoordinateSystem = EarthMJ2000Eq;
+GMAT DefaultOrbitView.ViewUpAxis = Z;
+GMAT DefaultOrbitView.EclipticPlane = Off;
+GMAT DefaultOrbitView.XYPlane = On;
+GMAT DefaultOrbitView.WireFrame = Off;
+GMAT DefaultOrbitView.Axes = On;
+GMAT DefaultOrbitView.Grid = Off;
+GMAT DefaultOrbitView.SunLine = Off;
+GMAT DefaultOrbitView.UseInitialView = On;
+GMAT DefaultOrbitView.StarCount = 7000;
+GMAT DefaultOrbitView.EnableStars = On;
+GMAT DefaultOrbitView.EnableConstellations = On;
+
+Create GroundTrackPlot DefaultGroundTrackPlot;
+GMAT DefaultGroundTrackPlot.SolverIterations = Current;
+GMAT DefaultGroundTrackPlot.UpperLeft = [ 0.1945578231292517 0.09623430962343096 ];
+GMAT DefaultGroundTrackPlot.Size = [ 0.7904761904761904 0.7834728033472803 ];
+GMAT DefaultGroundTrackPlot.RelativeZOrder = 478;
+GMAT DefaultGroundTrackPlot.Maximized = false;
+GMAT DefaultGroundTrackPlot.Add = {CPP, Durand, Manoa, PDX, Sapling_Giganteum, Yearling};
+GMAT DefaultGroundTrackPlot.DataCollectFrequency = 1;
+GMAT DefaultGroundTrackPlot.UpdatePlotFrequency = 50;
+GMAT DefaultGroundTrackPlot.NumPointsToRedraw = 0;
+GMAT DefaultGroundTrackPlot.ShowPlot = true;
+GMAT DefaultGroundTrackPlot.MaxPlotPoints = 20000;
+GMAT DefaultGroundTrackPlot.CentralBody = Earth;
+GMAT DefaultGroundTrackPlot.TextureMap = 'ModifiedBlueMarble.jpg';
+
+Create ReportFile ReportFile1;
+GMAT ReportFile1.SolverIterations = Current;
+GMAT ReportFile1.UpperLeft = [ 0 0 ];
+GMAT ReportFile1.Size = [ 0 0 ];
+GMAT ReportFile1.RelativeZOrder = 0;
+GMAT ReportFile1.Maximized = false;
+GMAT ReportFile1.Filename = 'SaplingGiganteumRAAN.txt';
+GMAT ReportFile1.Precision = 16;
+GMAT ReportFile1.Add = {Sapling_Giganteum.A1ModJulian, Sapling_Giganteum.EarthMJ2000Eq.X, Sapling_Giganteum.EarthMJ2000Eq.RAAN};
+GMAT ReportFile1.WriteHeaders = true;
+GMAT ReportFile1.LeftJustify = On;
+GMAT ReportFile1.ZeroFill = Off;
+GMAT ReportFile1.FixedWidth = true;
+GMAT ReportFile1.Delimiter = ' ';
+GMAT ReportFile1.ColumnWidth = 23;
+GMAT ReportFile1.WriteReport = true;
+
+
+%----------------------------------------
+%---------- Mission Sequence
+%----------------------------------------
+
+BeginMissionSequence;
+Propagate DefaultProp(Sapling_Giganteum) DefaultProp(Yearling) {Sapling_Giganteum.ElapsedSecs = 86400.0};

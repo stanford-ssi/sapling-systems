@@ -241,6 +241,13 @@ GMAT FogmCd.SteadyStateSigma = 0.05;
 GMAT FogmCd.HalfLife = 864000;
 
 %----------------------------------------
+%---------- Output
+%----------------------------------------
+Create ReportFile Sapling2_orbit_estimate;
+
+Sapling2_orbit_estimate.Add = {EstSat.UTCGregorian EstSat.Earth.SMA, EstSat.Earth.ECC, EstSat.INC, EstSat.EarthMJ2000Eq.RAAN, EstSat.EarthMJ2000Eq.AOP, EstSat.Earth.MA, }
+
+%----------------------------------------
 %---------- Mission Sequence
 %----------------------------------------
 
@@ -255,3 +262,5 @@ BeginMissionSequence;
 GMAT EstSat.OrbitErrorCovariance = diag([1e-5 1e-5 1e-5 1e-7 1e-7 1e-7]);
 
 RunEstimator EKF;
+
+

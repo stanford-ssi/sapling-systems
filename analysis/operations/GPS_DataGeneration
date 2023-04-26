@@ -1,0 +1,211 @@
+%
+%   Spacecraft
+%
+
+
+%----------------------------------------
+%---------- Spacecraft
+%----------------------------------------
+
+Create Spacecraft SimSat;
+
+GMAT SimSat.DateFormat = UTCGregorian;
+GMAT SimSat.Epoch = '10 Jun 2014 00:00:00.000';
+GMAT SimSat.CoordinateSystem = EarthMJ2000Eq;
+GMAT SimSat.DisplayStateType = Cartesian;
+GMAT SimSat.X = 576.869556;
+GMAT SimSat.Y = -5701.142761;
+GMAT SimSat.Z = -4170.593691;
+GMAT SimSat.VX = -1.76450794;
+GMAT SimSat.VY = 4.18128798;
+GMAT SimSat.VZ = -5.96578986;
+GMAT SimSat.DryMass = 10;
+GMAT SimSat.Cd = 2.2;
+GMAT SimSat.Cr = 1.8;
+GMAT SimSat.DragArea = 10;
+GMAT SimSat.SRPArea = 10;
+GMAT SimSat.SPADDragScaleFactor = 1;
+GMAT SimSat.SPADSRPScaleFactor = 1;
+GMAT SimSat.AtmosDensityScaleFactor = 1;
+GMAT SimSat.ExtendedMassPropertiesModel = 'None';
+GMAT SimSat.NAIFId = -10005001;
+GMAT SimSat.NAIFIdReferenceFrame = -9005001;
+GMAT SimSat.OrbitColor = Red;
+GMAT SimSat.TargetColor = Teal;
+GMAT SimSat.OrbitErrorCovariance = [ 1e+70 0 0 0 0 0 ; 0 1e+70 0 0 0 0 ; 0 0 1e+70 0 0 0 ; 0 0 0 1e+70 0 0 ; 0 0 0 0 1e+70 0 ; 0 0 0 0 0 1e+70 ];
+GMAT SimSat.CdSigma = 1e+70;
+GMAT SimSat.CrSigma = 1e+70;
+GMAT SimSat.Id = 'LEOSat';
+GMAT SimSat.Attitude = CoordinateSystemFixed;
+GMAT SimSat.SPADSRPInterpolationMethod = Bilinear;
+GMAT SimSat.SPADSRPScaleFactorSigma = 1e+70;
+GMAT SimSat.SPADDragInterpolationMethod = Bilinear;
+GMAT SimSat.SPADDragScaleFactorSigma = 1e+70;
+GMAT SimSat.AtmosDensityScaleFactorSigma = 1e+70;
+GMAT SimSat.AddHardware = {GpsReceiver, GpsAntenna};
+GMAT SimSat.ModelFile = 'aura.3ds';
+GMAT SimSat.ModelOffsetX = 0;
+GMAT SimSat.ModelOffsetY = 0;
+GMAT SimSat.ModelOffsetZ = 0;
+GMAT SimSat.ModelRotationX = 0;
+GMAT SimSat.ModelRotationY = 0;
+GMAT SimSat.ModelRotationZ = 0;
+GMAT SimSat.ModelScale = 1;
+GMAT SimSat.AttitudeDisplayStateType = 'Quaternion';
+GMAT SimSat.AttitudeRateDisplayStateType = 'AngularVelocity';
+GMAT SimSat.AttitudeCoordinateSystem = EarthMJ2000Eq;
+GMAT SimSat.EulerAngleSequence = '321';
+
+%----------------------------------------
+%---------- Hardware Components
+%----------------------------------------
+
+
+%
+%   Spacecraft hardware
+%
+
+Create Antenna GpsAntenna;
+GMAT GpsAntenna.DirectionX = 1;
+GMAT GpsAntenna.DirectionY = 0;
+GMAT GpsAntenna.DirectionZ = 0;
+GMAT GpsAntenna.SecondDirectionX = 0;
+GMAT GpsAntenna.SecondDirectionY = 1;
+GMAT GpsAntenna.SecondDirectionZ = 0;
+GMAT GpsAntenna.HWOriginInBCSX = 0;
+GMAT GpsAntenna.HWOriginInBCSY = 0;
+GMAT GpsAntenna.HWOriginInBCSZ = 0;
+
+Create Receiver GpsReceiver;
+
+GMAT GpsReceiver.PrimaryAntenna = GpsAntenna;
+GMAT GpsReceiver.Id = '800';
+GMAT GpsReceiver.ErrorModels = {PosVecModel};
+
+%----------------------------------------
+%---------- ForceModels
+%----------------------------------------
+
+
+%
+%   Force model
+%
+
+Create ForceModel FM;
+
+GMAT FM.CentralBody = Earth;
+GMAT FM.PrimaryBodies = {Earth};
+GMAT FM.SRP = On;
+GMAT FM.RelativisticCorrection = Off;
+GMAT FM.ErrorControl = None;
+GMAT FM.GravityField.Earth.Degree = 8;
+GMAT FM.GravityField.Earth.Order = 8;
+GMAT FM.GravityField.Earth.StmLimit = 100;
+GMAT FM.GravityField.Earth.PotentialFile = 'JGM2.cof';
+GMAT FM.GravityField.Earth.TideModel = 'None';
+GMAT FM.SRP.Flux = 1367;
+GMAT FM.SRP.SRPModel = Spherical;
+GMAT FM.SRP.Nominal_Sun = 149597870.691;
+GMAT FM.Drag.AtmosphereModel = JacchiaRoberts;
+GMAT FM.Drag.HistoricWeatherSource = 'CSSISpaceWeatherFile';
+GMAT FM.Drag.PredictedWeatherSource = 'ConstantFluxAndGeoMag';
+GMAT FM.Drag.CSSISpaceWeatherFile = 'SpaceWeather-All-v1.2.txt';
+GMAT FM.Drag.SchattenFile = 'SchattenPredict.txt';
+GMAT FM.Drag.F107 = 150;
+GMAT FM.Drag.F107A = 150;
+GMAT FM.Drag.MagneticIndex = 3;
+GMAT FM.Drag.SchattenErrorModel = 'Nominal';
+GMAT FM.Drag.SchattenTimingModel = 'NominalCycle';
+GMAT FM.Drag.DragModel = 'Spherical';
+
+%----------------------------------------
+%---------- Propagators
+%----------------------------------------
+
+%
+%   Propagator
+%
+
+Create Propagator Prop;
+
+GMAT Prop.FM = FM;
+GMAT Prop.Type = RungeKutta89;
+GMAT Prop.InitialStepSize = 60;
+GMAT Prop.Accuracy = 9.999999999999999e-12;
+GMAT Prop.MinStep = 0;
+GMAT Prop.MaxStep = 60;
+GMAT Prop.MaxStepAttempts = 50;
+GMAT Prop.StopIfAccuracyIsViolated = true;
+
+%----------------------------------------
+%---------- ErrorModels
+%----------------------------------------
+
+Create ErrorModel PosVecModel;
+
+GMAT PosVecModel.Type = 'GPS_PosVec';
+GMAT PosVecModel.NoiseSigma = 0.01;
+GMAT PosVecModel.Bias = 0;
+GMAT PosVecModel.BiasSigma = 1e+70;
+
+%----------------------------------------
+%---------- MeasurementModels
+%----------------------------------------
+
+%
+%   Tracking file sets
+%
+
+Create TrackingFileSet SimData;
+
+GMAT SimData.AddTrackingConfig = {'{{SimSat.GpsReceiver},GPS_PosVec}'};
+GMAT SimData.FileName = {'gps_posvec.gmd'};
+GMAT SimData.UseLightTime = true;
+GMAT SimData.UseRelativityCorrection = false;
+GMAT SimData.UseETminusTAI = false;
+GMAT SimData.AberrationCorrection = 'None';
+GMAT SimData.SimRangeModuloConstant = 1e+18;
+GMAT SimData.SimDopplerCountInterval = 1;
+GMAT SimData.SimTDRSSmarId = 0;
+GMAT SimData.SimTDRSTrackerType = 0;
+GMAT SimData.SimDopplerCountIntervalForRefTDRS = 1;
+GMAT SimData.SimTDRSNode4FrequencyForRefTDRS = 2000;
+GMAT SimData.SimTDRSNode4FrequencyBandForRefTDRS = 1;
+GMAT SimData.SimTDRSSmarIdForRefTDRS = 0;
+GMAT SimData.SimTDRSDataFlagForRefTDRS = 0;
+GMAT SimData.TimeGapForPassBreak = 1e+70;
+GMAT SimData.MinHeightOfRayPath = 500;
+GMAT SimData.MaxCentralAngleOfRayPath = 70;
+
+%----------------------------------------
+%---------- Solvers
+%----------------------------------------
+
+
+%
+%    Simulator
+%
+
+Create Simulator Sim;
+
+GMAT Sim.AddData = {SimData};
+GMAT Sim.Propagator = Prop
+GMAT Sim.EpochFormat = UTCGregorian;
+GMAT Sim.InitialEpoch = '10 Jun 2014 00:00:00.000';
+GMAT Sim.FinalEpoch = '11 Jun 2014 00:00:00.000';
+GMAT Sim.MeasurementTimeStep = 600;
+GMAT Sim.AddNoise = On;
+
+%----------------------------------------
+%---------- Mission Sequence
+%----------------------------------------
+
+
+
+%
+%   Mission sequence
+%
+
+BeginMissionSequence;
+
+RunSimulator Sim;

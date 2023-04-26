@@ -12,11 +12,11 @@ GMAT Sapling_Giganteum.Epoch = '11 Apr 2023 07:52:46.950';
 GMAT Sapling_Giganteum.CoordinateSystem = EarthFixed;
 GMAT Sapling_Giganteum.DisplayStateType = Cartesian;
 GMAT Sapling_Giganteum.X = 5219.266192999999;
-GMAT Sapling_Giganteum.Y = 4016.002640000003;
-GMAT Sapling_Giganteum.Z = 2023.656392999999;
-GMAT Sapling_Giganteum.VX = -0.8411080000000004;
-GMAT Sapling_Giganteum.VY = -2.545173000000002;
-GMAT Sapling_Giganteum.VZ = 7.199462;
+GMAT Sapling_Giganteum.Y = 4016.002640000002;
+GMAT Sapling_Giganteum.Z = 2023.656393;
+GMAT Sapling_Giganteum.VX = -0.8411080000000001;
+GMAT Sapling_Giganteum.VY = -2.545173000000001;
+GMAT Sapling_Giganteum.VZ = 7.199462000000001;
 GMAT Sapling_Giganteum.DryMass = 850;
 GMAT Sapling_Giganteum.Cd = 2.2;
 GMAT Sapling_Giganteum.Cr = 1.8;
@@ -58,11 +58,11 @@ GMAT Yearling.DateFormat = UTCGregorian;
 GMAT Yearling.Epoch = '11 Apr 2023 07:53:38.750';
 GMAT Yearling.CoordinateSystem = EarthFixed;
 GMAT Yearling.DisplayStateType = Cartesian;
-GMAT Yearling.X = 5166.713227000002;
-GMAT Yearling.Y = 3877.849623;
+GMAT Yearling.X = 5166.713227000001;
+GMAT Yearling.Y = 3877.849623000001;
 GMAT Yearling.Z = 2393.158201000001;
 GMAT Yearling.VX = -1.186053;
-GMAT Yearling.VY = -2.786284;
+GMAT Yearling.VY = -2.786284000000001;
 GMAT Yearling.VZ = 7.060352000000004;
 GMAT Yearling.DryMass = 850;
 GMAT Yearling.Cd = 2.2;
@@ -217,7 +217,6 @@ GMAT UNLV.MinimumElevationAngle = 7;
 
 
 
-
 %----------------------------------------
 %---------- ForceModels
 %----------------------------------------
@@ -265,7 +264,7 @@ GMAT ContactLocator1.UseStellarAberration = true;
 GMAT ContactLocator1.WriteReport = true;
 GMAT ContactLocator1.RunMode = Automatic;
 GMAT ContactLocator1.UseEntireInterval = true;
-GMAT ContactLocator1.Observers = {CPP, Durand, Manoa, PDX, PismoAirBNB, UNLV};
+GMAT ContactLocator1.Observers = {CPP, Durand, Manoa, PDX};
 GMAT ContactLocator1.LightTimeDirection = Transmit;
 GMAT ContactLocator1.LeftJustified = false;
 GMAT ContactLocator1.ReportPrecision = 6;
@@ -285,7 +284,7 @@ GMAT ContactLocator2.UseStellarAberration = true;
 GMAT ContactLocator2.WriteReport = true;
 GMAT ContactLocator2.RunMode = Automatic;
 GMAT ContactLocator2.UseEntireInterval = true;
-GMAT ContactLocator2.Observers = {CPP, Durand, Manoa, PDX, PismoAirBNB, UNLV};
+GMAT ContactLocator2.Observers = {CPP, Durand, Manoa, PDX};
 GMAT ContactLocator2.LightTimeDirection = Transmit;
 GMAT ContactLocator2.LeftJustified = false;
 GMAT ContactLocator2.ReportPrecision = 6;
@@ -299,9 +298,9 @@ GMAT ContactLocator2.ReportTimeFormat = 'UTCGregorian';
 
 Create OrbitView DefaultOrbitView;
 GMAT DefaultOrbitView.SolverIterations = Current;
-GMAT DefaultOrbitView.UpperLeft = [ 0.4074829931972789 0.03347280334728033 ];
-GMAT DefaultOrbitView.Size = [ 0.536734693877551 0.401673640167364 ];
-GMAT DefaultOrbitView.RelativeZOrder = 49;
+GMAT DefaultOrbitView.UpperLeft = [ 0.3122448979591837 0.03242677824267783 ];
+GMAT DefaultOrbitView.Size = [ 0.4115646258503401 0.356694560669456 ];
+GMAT DefaultOrbitView.RelativeZOrder = 61;
 GMAT DefaultOrbitView.Maximized = false;
 GMAT DefaultOrbitView.Add = {Sapling_Giganteum, Yearling, Earth};
 GMAT DefaultOrbitView.CoordinateSystem = EarthMJ2000Eq;
@@ -331,9 +330,9 @@ GMAT DefaultOrbitView.EnableConstellations = On;
 
 Create GroundTrackPlot DefaultGroundTrackPlot;
 GMAT DefaultGroundTrackPlot.SolverIterations = Current;
-GMAT DefaultGroundTrackPlot.UpperLeft = [ 0.1340136054421769 0.03347280334728033 ];
-GMAT DefaultGroundTrackPlot.Size = [ 0.8659863945578231 0.8838912133891214 ];
-GMAT DefaultGroundTrackPlot.RelativeZOrder = 71;
+GMAT DefaultGroundTrackPlot.UpperLeft = [ 0.1945578231292517 0.09623430962343096 ];
+GMAT DefaultGroundTrackPlot.Size = [ 0.7904761904761904 0.7834728033472803 ];
+GMAT DefaultGroundTrackPlot.RelativeZOrder = 478;
 GMAT DefaultGroundTrackPlot.Maximized = false;
 GMAT DefaultGroundTrackPlot.Add = {CPP, Durand, Manoa, PDX, Sapling_Giganteum, Yearling};
 GMAT DefaultGroundTrackPlot.DataCollectFrequency = 1;

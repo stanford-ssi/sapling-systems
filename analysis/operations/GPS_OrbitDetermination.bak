@@ -13,12 +13,12 @@ GMAT EstSat.Epoch = '17 Apr 2023 14:21:18.965';
 % Computed using TLEtoKeplerian
 GMAT EstSat.CoordinateSystem = EarthMJ2000Eq;
 GMAT EstSat.DisplayStateType = Keplerian;
-GMAT EstSat.SMA = 6874.920683760559;
-GMAT EstSat.ECC = 0.002955099999999917;
+GMAT EstSat.SMA = 6874.920683760557;
+GMAT EstSat.ECC = 0.002955100000000202;
 GMAT EstSat.INC = 97.476;
 GMAT EstSat.RAAN = 3.437599999999908;
-GMAT EstSat.AOP = 148.891700000009;
-GMAT EstSat.TA = 66.56492295102802;
+GMAT EstSat.AOP = 148.8917000000014;
+GMAT EstSat.TA = 66.56492295103565;
 
 GMAT EstSat.DryMass = 1.16;
 GMAT EstSat.Cd = 1.05; % cube
@@ -84,7 +84,6 @@ Create Receiver GpsReceiver;
 GMAT GpsReceiver.PrimaryAntenna = GpsAntenna;
 GMAT GpsReceiver.Id = '800';
 GMAT GpsReceiver.ErrorModels = {PosVecModel};
-
 
 
 
@@ -215,27 +214,6 @@ GMAT EKF.WarmStartEpoch = 'FirstMeasurement';
 GMAT EKF.OutputWarmStartFile = 'filter.csv';
 
 %----------------------------------------
-%---------- Output
-%----------------------------------------
-Create ReportFile Sapling2_orbit_estimate;
-GMAT Sapling2_orbit_estimate.SolverIterations = Current;
-GMAT Sapling2_orbit_estimate.UpperLeft = [ 0 0 ];
-GMAT Sapling2_orbit_estimate.Size = [ 0 0 ];
-GMAT Sapling2_orbit_estimate.RelativeZOrder = 0;
-GMAT Sapling2_orbit_estimate.Maximized = false;
-GMAT Sapling2_orbit_estimate.Filename = 'Sapling2_orbit_estimate.txt';
-GMAT Sapling2_orbit_estimate.Precision = 16;
-
-GMAT Sapling2_orbit_estimate.Add = {EstSat.UTCGregorian, EstSat.Earth.SMA, EstSat.Earth.ECC, EstSat.INC, EstSat.EarthMJ2000Eq.RAAN, EstSat.EarthMJ2000Eq.AOP, EstSat.Earth.MA};
-GMAT Sapling2_orbit_estimate.WriteHeaders = true;
-GMAT Sapling2_orbit_estimate.LeftJustify = On;
-GMAT Sapling2_orbit_estimate.ZeroFill = Off;
-GMAT Sapling2_orbit_estimate.FixedWidth = true;
-GMAT Sapling2_orbit_estimate.Delimiter = ' ';
-GMAT Sapling2_orbit_estimate.ColumnWidth = 23;
-GMAT Sapling2_orbit_estimate.WriteReport = true;
-
-%----------------------------------------
 %---------- User Objects
 %----------------------------------------
 
@@ -263,6 +241,13 @@ GMAT FogmCd.SteadyStateSigma = 0.05;
 GMAT FogmCd.HalfLife = 864000;
 
 %----------------------------------------
+%---------- Output
+%----------------------------------------
+Create ReportFile Sapling2_orbit_estimate;
+
+Sapling2_orbit_estimate.Add = {EstSat.UTCGregorian EstSat.Earth.SMA, EstSat.Earth.ECC, EstSat.INC, EstSat.EarthMJ2000Eq.RAAN, EstSat.EarthMJ2000Eq.AOP, EstSat.Earth.MA, }
+
+%----------------------------------------
 %---------- Mission Sequence
 %----------------------------------------
 
@@ -277,6 +262,5 @@ BeginMissionSequence;
 GMAT EstSat.OrbitErrorCovariance = diag([1e-5 1e-5 1e-5 1e-7 1e-7 1e-7]);
 
 RunEstimator EKF;
-
 
 
